@@ -1,0 +1,56 @@
+# pyproject.toml — backend package definition, dependencies, and tool configuration
+# (ruff lint rules, pytest defaults) for the AITrader2 API service.
+
+[project]
+name = "aitrader2-backend"
+version = "0.1.0"
+description = "AITrader2 backend: AI stock analysis and paper-trading API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.130",
+    "uvicorn[standard]>=0.40",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.16",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.10",
+    "pyjwt>=2.10",
+    "bcrypt>=4.2",
+    "yfinance>=0.2.50",
+    "pandas>=2.2",
+    "httpx>=0.28",
+    "celery>=5.5",
+    "redis>=5.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.9",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/F: pycodestyle+pyflakes, I: import sorting, D: docstring presence/format (Google style)
+select = ["E", "F", "I", "D"]
+ignore = [
+    "D100",  # file role is documented via header comments instead of module docstrings
+    "D104",  # package __init__ docstrings not required
+    "D203",  # incompatible with D211
+    "D213",  # incompatible with D212 (Google style uses first-line summary)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+"alembic/*" = ["D"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,31 @@
+symbol,name,sector
+AAPL,Apple Inc.,Information Technology
+MSFT,Microsoft Corporation,Information Technology
+NVDA,NVIDIA Corporation,Information Technology
+AMZN,Amazon.com Inc.,Consumer Discretionary
+GOOGL,Alphabet Inc. Class A,Communication Services
+GOOG,Alphabet Inc. Class C,Communication Services
+META,Meta Platforms Inc.,Communication Services
+TSLA,Tesla Inc.,Consumer Discretionary
+AVGO,Broadcom Inc.,Information Technology
+COST,Costco Wholesale Corporation,Consumer Staples
+NFLX,Netflix Inc.,Communication Services
+ADBE,Adobe Inc.,Information Technology
+PEP,PepsiCo Inc.,Consumer Staples
+CSCO,Cisco Systems Inc.,Information Technology
+INTC,Intel Corporation,Information Technology
+AMD,Advanced Micro Devices Inc.,Information Technology
+QCOM,QUALCOMM Incorporated,Information Technology
+TXN,Texas Instruments Incorporated,Information Technology
+AMAT,Applied Materials Inc.,Information Technology
+INTU,Intuit Inc.,Information Technology
+BKNG,Booking Holdings Inc.,Consumer Discretionary
+SBUX,Starbucks Corporation,Consumer Discretionary
+MDLZ,Mondelez International Inc.,Consumer Staples
+GILD,Gilead Sciences Inc.,Health Care
+ADP,Automatic Data Processing Inc.,Industrials
+REGN,Regeneron Pharmaceuticals Inc.,Health Care
+VRTX,Vertex Pharmaceuticals Incorporated,Health Care
+MU,Micron Technology Inc.,Information Technology
+PANW,Palo Alto Networks Inc.,Information Technology
+MRVL,Marvell Technology Inc.,Information Technology

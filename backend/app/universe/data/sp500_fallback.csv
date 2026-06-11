@@ -1,0 +1,36 @@
+symbol,name,sector
+AAPL,Apple Inc.,Information Technology
+MSFT,Microsoft Corporation,Information Technology
+NVDA,NVIDIA Corporation,Information Technology
+AMZN,Amazon.com Inc.,Consumer Discretionary
+GOOGL,Alphabet Inc. Class A,Communication Services
+META,Meta Platforms Inc.,Communication Services
+TSLA,Tesla Inc.,Consumer Discretionary
+BRK-B,Berkshire Hathaway Inc. Class B,Financials
+JPM,JPMorgan Chase & Co.,Financials
+V,Visa Inc.,Financials
+UNH,UnitedHealth Group Incorporated,Health Care
+XOM,Exxon Mobil Corporation,Energy
+JNJ,Johnson & Johnson,Health Care
+WMT,Walmart Inc.,Consumer Staples
+MA,Mastercard Incorporated,Financials
+PG,Procter & Gamble Company,Consumer Staples
+HD,Home Depot Inc.,Consumer Discretionary
+COST,Costco Wholesale Corporation,Consumer Staples
+ORCL,Oracle Corporation,Information Technology
+KO,Coca-Cola Company,Consumer Staples
+BAC,Bank of America Corporation,Financials
+PEP,PepsiCo Inc.,Consumer Staples
+LLY,Eli Lilly and Company,Health Care
+ABBV,AbbVie Inc.,Health Care
+MRK,Merck & Co. Inc.,Health Care
+CVX,Chevron Corporation,Energy
+AVGO,Broadcom Inc.,Information Technology
+ADBE,Adobe Inc.,Information Technology
+CRM,Salesforce Inc.,Information Technology
+NFLX,Netflix Inc.,Communication Services
+DIS,Walt Disney Company,Communication Services
+MCD,McDonald's Corporation,Consumer Discretionary
+CSCO,Cisco Systems Inc.,Information Technology
+INTC,Intel Corporation,Information Technology
+AMD,Advanced Micro Devices Inc.,Information Technology

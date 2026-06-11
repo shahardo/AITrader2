@@ -1,0 +1,61 @@
+// App.tsx — application shell: top navigation, route table, and the auth guard
+// that redirects logged-out visitors to the login page.
+
+import type { ReactElement } from 'react'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { clearTokens, getTokens } from './api/client'
+import LoginPage from './pages/Login'
+import UniversePage from './pages/Universe'
+
+/** Redirect to /login when no tokens are stored; otherwise render children. */
+function RequireAuth({ children }: { children: ReactElement }) {
+  return getTokens() ? children : <Navigate to="/login" replace />
+}
+
+/** Top navigation bar with logout, hidden on the login page. */
+function NavBar() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  if (location.pathname === '/login') return null
+  return (
+    <nav className="flex items-center gap-6 border-b border-slate-800 bg-slate-900 px-6 py-3">
+      <span className="font-bold text-emerald-400">AITrader2</span>
+      <Link to="/universe" className="text-sm text-slate-300 hover:text-white">
+        Universe
+      </Link>
+      <span className="ml-auto text-xs text-slate-500">
+        Not financial advice — paper trading only
+      </span>
+      <button
+        className="rounded bg-slate-800 px-3 py-1 text-sm hover:bg-slate-700"
+        onClick={() => {
+          clearTokens()
+          navigate('/login')
+        }}
+      >
+        Log out
+      </button>
+    </nav>
+  )
+}
+
+/** Route table for the app. */
+export default function App() {
+  return (
+    <div className="min-h-screen">
+      <NavBar />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/universe"
+          element={
+            <RequireAuth>
+              <UniversePage />
+            </RequireAuth>
+          }
+        />
+        <Route path="*" element={<Navigate to="/universe" replace />} />
+      </Routes>
+    </div>
+  )
+}

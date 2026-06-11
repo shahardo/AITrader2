@@ -1,0 +1,66 @@
+# docker-compose.yml — local deployment of the full stack:
+# db (PostgreSQL), redis, api (FastAPI), worker + beat (Celery), web (Vite dev server).
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: aitrader
+      POSTGRES_PASSWORD: aitrader
+      POSTGRES_DB: aitrader
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aitrader"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://aitrader:aitrader@db:5432/aitrader
+      REDIS_URL: redis://redis:6379/0
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+
+  worker:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://aitrader:aitrader@db:5432/aitrader
+      REDIS_URL: redis://redis:6379/0
+    command: celery -A app.jobs.celery_app worker --loglevel=info
+    depends_on: [api]
+
+  beat:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://aitrader:aitrader@db:5432/aitrader
+      REDIS_URL: redis://redis:6379/0
+    command: celery -A app.jobs.celery_app beat --loglevel=info
+    depends_on: [api]
+
+  web:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on: [api]
+
+volumes:
+  pgdata:

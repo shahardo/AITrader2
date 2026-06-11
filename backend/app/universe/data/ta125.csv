@@ -1,0 +1,44 @@
+symbol,name,sector
+TEVA.TA,Teva Pharmaceutical Industries,Health Care
+NICE.TA,NICE Ltd,Information Technology
+ESLT.TA,Elbit Systems,Industrials
+ICL.TA,ICL Group,Materials
+LUMI.TA,Bank Leumi,Financials
+POLI.TA,Bank Hapoalim,Financials
+DSCT.TA,Israel Discount Bank,Financials
+MZTF.TA,Mizrahi Tefahot Bank,Financials
+FIBI.TA,First International Bank of Israel,Financials
+HARL.TA,Harel Insurance Investments,Financials
+PHOE.TA,Phoenix Holdings,Financials
+CLIS.TA,Clal Insurance,Financials
+MGDL.TA,Migdal Insurance,Financials
+AZRG.TA,Azrieli Group,Real Estate
+MLSR.TA,Melisron,Real Estate
+AMOT.TA,Amot Investments,Real Estate
+ALHE.TA,Alony Hetz,Real Estate
+BIG.TA,Big Shopping Centers,Real Estate
+BEZQ.TA,Bezeq,Communication Services
+PTNR.TA,Partner Communications,Communication Services
+CEL.TA,Cellcom Israel,Communication Services
+ELAL.TA,El Al Israel Airlines,Industrials
+NVMI.TA,Nova Ltd,Information Technology
+CAMT.TA,Camtek,Information Technology
+TSEM.TA,Tower Semiconductor,Information Technology
+STRS.TA,Strauss Group,Consumer Staples
+SAE.TA,Shufersal,Consumer Staples
+RMLI.TA,Rami Levy Chain Stores,Consumer Staples
+DLEKG.TA,Delek Group,Energy
+NWMD.TA,NewMed Energy,Energy
+ENLT.TA,Enlight Renewable Energy,Utilities
+ORL.TA,Bazan Oil Refineries,Energy
+SPEN.TA,Shapir Engineering,Industrials
+ELTR.TA,Electra,Industrials
+ASHG.TA,Ashtrom Group,Industrials
+DIMRI.TA,Y.H. Dimri,Real Estate
+MTRX.TA,Matrix IT,Information Technology
+HLAN.TA,Hilan,Information Technology
+ONE.TA,One Software Technologies,Information Technology
+SPNS.TA,Sapiens International,Information Technology
+DANE.TA,Danel Adir Yeoshua,Industrials
+FOX.TA,Fox-Wizel,Consumer Discretionary
+TASE.TA,Tel Aviv Stock Exchange,Financials
