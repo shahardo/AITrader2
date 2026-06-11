@@ -45,6 +45,65 @@ export interface InstrumentDetail extends InstrumentOut {
   bars: PriceBarOut[]
 }
 
+export interface IndicatorSignal {
+  signal: -1 | 0 | 1
+  strength: number
+  value: number | null
+}
+
+export interface TrendChannelOut {
+  slope_annual_pct: number
+  width_pct: number
+  position: number
+  upper: number
+  mid: number
+  lower: number
+}
+
+export interface SRLevelOut {
+  price: number
+  kind: 'support' | 'resistance'
+  touches: number
+  last_touch_age: number
+  strength: number
+}
+
+export interface SnapshotOut {
+  date: string
+  technical_score: number
+  signals: Record<string, IndicatorSignal>
+  extras: { trend_channel: TrendChannelOut | null; sr_levels: SRLevelOut[] }
+}
+
+export interface SentimentItemOut {
+  source: string
+  title: string
+  url: string
+  published_at: string | null
+  sentiment: number
+  relevance: number
+  summary: string
+}
+
+export interface SentimentOut {
+  date: string
+  score: number
+  confidence: number
+  item_count: number
+  items: SentimentItemOut[]
+}
+
+export interface ScoreRow {
+  symbol: string
+  name: string
+  exchange: string
+  date: string
+  technical_score: number
+  sentiment_score: number | null
+  combined_score: number
+  rank: number | null
+}
+
 /** Persist a token pair to localStorage. */
 export function storeTokens(tokens: TokenPair): void {
   localStorage.setItem(TOKEN_KEY, JSON.stringify(tokens))
@@ -135,4 +194,27 @@ export function listInstruments(params?: {
 /** Fetch one instrument with recent bars. */
 export function getInstrument(symbol: string, days = 365): Promise<InstrumentDetail> {
   return request<InstrumentDetail>(`/instruments/${encodeURIComponent(symbol)}?days=${days}`)
+}
+
+/** Fetch the latest universe score leaderboard. */
+export function getLatestScores(): Promise<ScoreRow[]> {
+  return request<ScoreRow[]>('/scores/latest')
+}
+
+/** Fetch the latest indicator snapshot for one instrument. */
+export function getAnalysis(symbol: string): Promise<SnapshotOut> {
+  return request<SnapshotOut>(`/instruments/${encodeURIComponent(symbol)}/analysis`)
+}
+
+/** Fetch the latest sentiment composite + items for one instrument. */
+export function getSentiment(symbol: string): Promise<SentimentOut> {
+  return request<SentimentOut>(`/instruments/${encodeURIComponent(symbol)}/sentiment`)
+}
+
+/** Trigger a synchronous analysis run for selected symbols. */
+export function runAnalysis(params: {
+  symbols: string[]
+  with_sentiment: boolean
+}): Promise<{ analyzed: number; scores: Record<string, number> }> {
+  return request('/analysis/run', { method: 'POST', body: JSON.stringify(params) })
 }

@@ -5,6 +5,8 @@ import type { ReactElement } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { clearTokens, getTokens } from './api/client'
 import LoginPage from './pages/Login'
+import ScoresPage from './pages/Scores'
+import StockDetailPage from './pages/StockDetail'
 import UniversePage from './pages/Universe'
 
 /** Redirect to /login when no tokens are stored; otherwise render children. */
@@ -22,6 +24,9 @@ function NavBar() {
       <span className="font-bold text-emerald-400">AITrader2</span>
       <Link to="/universe" className="text-sm text-slate-300 hover:text-white">
         Universe
+      </Link>
+      <Link to="/scores" className="text-sm text-slate-300 hover:text-white">
+        Scores
       </Link>
       <span className="ml-auto text-xs text-slate-500">
         Not financial advice — paper trading only
@@ -51,6 +56,22 @@ export default function App() {
           element={
             <RequireAuth>
               <UniversePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/scores"
+          element={
+            <RequireAuth>
+              <ScoresPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/stocks/:symbol"
+          element={
+            <RequireAuth>
+              <StockDetailPage />
             </RequireAuth>
           }
         />

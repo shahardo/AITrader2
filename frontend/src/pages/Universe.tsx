@@ -2,6 +2,7 @@
 // all instruments in the scan universe with their latest cached prices.
 
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { listInstruments } from '../api/client'
 
@@ -70,7 +71,14 @@ export default function UniversePage() {
           <tbody>
             {data.map((inst) => (
               <tr key={inst.id} className="border-b border-slate-800 hover:bg-slate-900">
-                <td className="py-2 font-mono text-emerald-300">{inst.symbol}</td>
+                <td className="py-2 font-mono">
+                  <Link
+                    to={`/stocks/${encodeURIComponent(inst.symbol)}`}
+                    className="text-emerald-300 hover:underline"
+                  >
+                    {inst.symbol}
+                  </Link>
+                </td>
                 <td>{inst.name}</td>
                 <td className="uppercase">{inst.exchange}</td>
                 <td className="text-slate-400">{inst.sector ?? '—'}</td>

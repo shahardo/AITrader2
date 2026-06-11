@@ -10,8 +10,9 @@ Docs: [PRD](docs/PRD.md) · [Development plan](docs/DEVELOPMENT_PLAN.md)
 
 ## Status
 
-Milestone 1 (Foundation & data) is implemented:
+Milestones 1-2 are implemented:
 
+**M1 — Foundation & data**
 - FastAPI backend with JWT auth (signup/login/refresh, profile)
 - PostgreSQL schema via Alembic (users, instruments, price_bars)
 - Market data provider interface + yfinance implementation (US + TASE via `.TA`)
@@ -20,6 +21,19 @@ Milestone 1 (Foundation & data) is implemented:
   snapshot, verified by the coverage script)
 - React frontend: login/signup + universe browser
 - Tests on both ends, CI via GitHub Actions
+
+**M2 — Analysis engines**
+- 14 technical indicators implemented in pure pandas/numpy (`app/ta/`):
+  SMA cross, EMA20, MACD, RSI, Stochastic, Bollinger, ATR, OBV, VWAP distance,
+  ADX, Williams %R, CCI, trend-channel regression, pivot-based support/resistance
+- Composite technical score (0-100) with strategy-overridable indicator weights
+- LLM plug-in layer: `LLMProvider` interface, Groq Llama 4 implementation
+  (Scout for bulk, Maverick for deep), call/cost audit log, Null fallback
+- Sentiment pipeline: Yahoo RSS, Google News, Reddit, Globes (TASE) → LLM item
+  scoring → recency-decayed composite with confidence weighting
+- Blended stock scores + universe ranking; graceful technical-only degradation
+- UI: stock detail page (candlestick chart with channel & S/R overlays, indicator
+  panel, sentiment drill-down) and the Scores leaderboard with a manual run trigger
 
 ## Quick start (Docker)
 

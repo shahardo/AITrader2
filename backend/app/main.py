@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, instruments, users
+from app.api import analysis, auth, instruments, users
 from app.core.config import get_settings
 
 
@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix=prefix)
     app.include_router(users.router, prefix=prefix)
     app.include_router(instruments.router, prefix=prefix)
+    app.include_router(analysis.router, prefix=prefix)
 
     @app.get("/health", tags=["ops"])
     def health() -> dict:
