@@ -43,6 +43,8 @@ export interface PriceBarOut {
 
 export interface InstrumentDetail extends InstrumentOut {
   bars: PriceBarOut[]
+  website: string | null
+  description: string | null
 }
 
 export interface IndicatorSignal {

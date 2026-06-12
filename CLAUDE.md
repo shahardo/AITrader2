@@ -135,6 +135,10 @@ TA-125 from the bundled seed `app/universe/data/ta125.csv` (a partial snapshot â
 gainers / most actives / small-cap gainers) during on-demand scans
 (`POST /scans`). `marketdata/` wraps `yfinance` behind the `MarketDataProvider` interface
 (`.TA` suffix for TASE symbols), with retry/backoff and dead-symbol skipping.
+`YFinanceProvider.fetch_company_profile` does a separate best-effort, non-retrying lookup of
+`website`/`longBusinessSummary` via `yf.Ticker(symbol).info`; `GET /instruments/{symbol}` lazily
+fetches and persists these onto `Instrument` on first view (`profile_fetched_at` marks the
+attempt, success or not, so it's never repeated) for the stock detail page's company info card.
 
 ### Frontend (`frontend/src/`)
 

@@ -5,7 +5,12 @@
       "Bash(npx tsc *)",
       "Bash(npx eslint *)",
       "Bash(git fetch *)",
-      "Bash(git show-ref *)"
+      "Bash(git show-ref *)",
+      "Bash(.venv/Scripts/python.exe -m ruff *)",
+      "Bash(.venv/Scripts/python.exe -m pytest *)",
+      "Bash(cd * && grep *)",
+      "Read(*)",
+      "Bash(grep *)"
     ]
   }
 }

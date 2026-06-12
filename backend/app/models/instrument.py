@@ -4,7 +4,7 @@
 import enum
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Enum, String
+from sqlalchemy import DateTime, Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -44,4 +44,9 @@ class Instrument(Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    website: Mapped[str | None] = mapped_column(String(500), default=None)
+    description: Mapped[str | None] = mapped_column(Text, default=None)
+    profile_fetched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
     )

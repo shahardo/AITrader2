@@ -16,6 +16,9 @@ const DETAIL = {
   id: 1, symbol: 'AAPL', name: 'Apple Inc.', exchange: 'us', sector: 'Tech',
   currency: 'USD', universe_source: 'sp500', last_close: 150.5,
   last_date: '2026-06-10', bar_count: 2,
+  website: 'https://www.apple.com',
+  description:
+    'Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.',
   bars: [
     { date: '2026-06-09', open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
     { date: '2026-06-10', open: 1.5, high: 2.5, low: 1, close: 2, volume: 12 },
@@ -81,6 +84,11 @@ describe('StockDetailPage', () => {
     expect(screen.getByText('SELL')).toBeInTheDocument()
     expect(screen.getByText('Apple beats expectations')).toBeInTheDocument()
     expect(screen.getByTestId('candle-chart')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'www.apple.com' })).toHaveAttribute(
+      'href',
+      'https://www.apple.com',
+    )
+    expect(screen.getByText(/Apple Inc\. designs, manufactures/)).toBeInTheDocument()
   })
 
   it('shows hints when analysis and sentiment are missing', async () => {
@@ -92,5 +100,20 @@ describe('StockDetailPage', () => {
     renderPage()
     expect(await screen.findByText(/no analysis yet/i)).toBeInTheDocument()
     expect(screen.getByText(/no sentiment data yet/i)).toBeInTheDocument()
+  })
+
+  it('omits the company info section when website and description are missing', async () => {
+    mockApi({
+      '/instruments/AAPL?days=365': {
+        status: 200,
+        body: { ...DETAIL, website: null, description: null },
+      },
+      '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
+      '/instruments/AAPL/sentiment': { status: 200, body: SENTIMENT },
+    })
+    renderPage()
+    await screen.findByText('72.5')
+    expect(screen.queryByRole('link', { name: /apple\.com/i })).not.toBeInTheDocument()
+    expect(screen.queryByAltText(/logo/i)).not.toBeInTheDocument()
   })
 })

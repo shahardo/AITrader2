@@ -93,6 +93,26 @@ class YFinanceProvider(MarketDataProvider):
         logger.error("yfinance batch permanently failed: %s", batch)
         return None
 
+    def fetch_company_profile(self, symbol: str) -> dict[str, str | None]:
+        """Best-effort one-shot fetch of company website and business summary.
+
+        Args:
+            symbol: Yahoo-format symbol (e.g. "AAPL", "TEVA.TA").
+
+        Returns:
+            dict[str, str | None]: {"website": ..., "description": ...}, with
+            None values when unavailable or on any failure.
+        """
+        try:
+            info = yf.Ticker(symbol).info
+            return {
+                "website": info.get("website") or None,
+                "description": info.get("longBusinessSummary") or None,
+            }
+        except Exception:  # noqa: BLE001 — best-effort, must never raise
+            logger.warning("yfinance company profile fetch failed for %s", symbol)
+            return {"website": None, "description": None}
+
     @staticmethod
     def _extract_symbol_bars(frame: pd.DataFrame, symbol: str, multi: bool) -> list[Bar]:
         """Convert one symbol's slice of a yfinance frame into Bar objects.

@@ -41,3 +41,5 @@ class InstrumentDetail(InstrumentOut):
     """Stock detail: instrument summary plus its price history."""
 
     bars: list[PriceBarOut] = []
+    website: str | None = None
+    description: str | None = None

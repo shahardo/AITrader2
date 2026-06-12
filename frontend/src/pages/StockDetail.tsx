@@ -2,6 +2,7 @@
 // S/R overlays, technical score + per-indicator signal panel, and the sentiment
 // drill-down (composite + scored media items).
 
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ApiError, getAnalysis, getInstrument, getSentiment } from '../api/client'
@@ -31,9 +32,24 @@ function signalBadge(signal: -1 | 0 | 1) {
   return <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-400">—</span>
 }
 
+/** Derive a Clearbit logo URL from a company website, or null if unavailable. */
+function logoUrl(website: string | null): string | null {
+  if (!website) return null
+  try {
+    const host = new URL(website).hostname.replace(/^www\./, '')
+    return `https://logo.clearbit.com/${host}`
+  } catch {
+    return null
+  }
+}
+
+const DESCRIPTION_TRUNCATE_LENGTH = 280
+
 /** Stock detail page for /stocks/:symbol. */
 export default function StockDetailPage() {
   const { symbol = '' } = useParams()
+  const [descExpanded, setDescExpanded] = useState(false)
+  const [logoFailed, setLogoFailed] = useState(false)
   const detail = useQuery({
     queryKey: ['instrument', symbol],
     queryFn: () => getInstrument(symbol),
@@ -80,6 +96,49 @@ export default function StockDetailPage() {
           </span>
         )}
       </header>
+
+      {(inst.website || inst.description) && (
+        <section className="rounded border border-slate-800 bg-slate-900 p-3">
+          <div className="flex items-start gap-3">
+            {inst.website && logoUrl(inst.website) && !logoFailed && (
+              <img
+                src={logoUrl(inst.website)!}
+                alt={`${inst.name} logo`}
+                className="h-10 w-10 rounded bg-white object-contain p-1"
+                onError={() => setLogoFailed(true)}
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              {inst.website && (
+                <a
+                  href={inst.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-emerald-300 hover:underline"
+                >
+                  {inst.website.replace(/^https?:\/\//, '')}
+                </a>
+              )}
+              {inst.description && (
+                <p className="mt-1 text-sm text-slate-400">
+                  {descExpanded || inst.description.length <= DESCRIPTION_TRUNCATE_LENGTH
+                    ? inst.description
+                    : `${inst.description.slice(0, DESCRIPTION_TRUNCATE_LENGTH)}…`}
+                  {inst.description.length > DESCRIPTION_TRUNCATE_LENGTH && (
+                    <button
+                      type="button"
+                      onClick={() => setDescExpanded((v) => !v)}
+                      className="ml-1 text-emerald-300 hover:underline"
+                    >
+                      {descExpanded ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <CandleChart
         bars={inst.bars}

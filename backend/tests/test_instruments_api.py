@@ -2,6 +2,9 @@
 
 from datetime import date
 
+from sqlalchemy import select
+
+from app.marketdata.yfinance_provider import YFinanceProvider
 from app.models.instrument import Exchange, Instrument, UniverseSource
 from app.models.price_bar import PriceBar
 
@@ -53,3 +56,30 @@ def test_detail_returns_ascending_bars(client, auth_headers, db_session):
 
 def test_detail_404_for_unknown_symbol(client, auth_headers):
     assert client.get("/api/v1/instruments/NOPE", headers=auth_headers).status_code == 404
+
+
+def test_detail_lazily_fetches_and_caches_company_profile(
+    client, auth_headers, db_session, monkeypatch
+):
+    _seed(db_session)
+    calls = []
+
+    def fake_fetch(self, symbol):
+        calls.append(symbol)
+        return {"website": "https://www.apple.com", "description": "Apple makes phones."}
+
+    monkeypatch.setattr(YFinanceProvider, "fetch_company_profile", fake_fetch)
+
+    resp = client.get("/api/v1/instruments/aapl", headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["website"] == "https://www.apple.com"
+    assert body["description"] == "Apple makes phones."
+    assert calls == ["AAPL"]
+
+    inst = db_session.scalar(select(Instrument).where(Instrument.symbol == "AAPL"))
+    assert inst.profile_fetched_at is not None
+
+    resp2 = client.get("/api/v1/instruments/aapl", headers=auth_headers)
+    assert resp2.json()["website"] == "https://www.apple.com"
+    assert calls == ["AAPL"]  # not re-fetched

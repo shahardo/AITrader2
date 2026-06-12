@@ -32,8 +32,9 @@ Milestones 1-2 are implemented:
 - Sentiment pipeline: Yahoo RSS, Google News, Reddit, Globes (TASE) → LLM item
   scoring → recency-decayed composite with confidence weighting
 - Blended stock scores + universe ranking; graceful technical-only degradation
-- UI: stock detail page (candlestick chart with channel & S/R overlays, indicator
-  panel, sentiment drill-down) and the Scores leaderboard with a manual run trigger
+- UI: stock detail page (company info card with logo/website/description,
+  candlestick chart with channel & S/R overlays, indicator panel, sentiment
+  drill-down) and the Scores leaderboard with a manual run trigger
 
 **M3 — Strategies & portfolios**
 - Strategy library (momentum, mean-reversion, trend-following, balanced) behind a

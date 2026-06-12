@@ -1,12 +1,15 @@
 # instruments.py — universe browser endpoints: list instruments with latest-price
 # summaries, and per-symbol detail with price history for charting.
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.db import get_db
+from app.marketdata.yfinance_provider import YFinanceProvider
 from app.models.instrument import Exchange, Instrument
 from app.models.price_bar import PriceBar
 from app.schemas.instrument import InstrumentDetail, InstrumentOut, PriceBarOut
@@ -113,6 +116,14 @@ def get_instrument(
     inst = db.scalar(select(Instrument).where(func.upper(Instrument.symbol) == symbol.upper()))
     if inst is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Instrument not found")
+
+    if inst.profile_fetched_at is None:
+        profile = YFinanceProvider().fetch_company_profile(inst.symbol)
+        inst.website = profile["website"]
+        inst.description = profile["description"]
+        inst.profile_fetched_at = datetime.now(UTC)
+        db.commit()
+
     bars = list(
         db.scalars(
             select(PriceBar)
