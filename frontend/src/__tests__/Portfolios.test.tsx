@@ -28,6 +28,7 @@ const PORTFOLIOS = [
 function mockApi(overrides: Record<string, unknown> = {}) {
   const routes: Record<string, unknown> = {
     // Order matters: more specific suffixes first ("includes" matching).
+    'stats/hit-rate': { evaluated: 12, hits: 8, hit_rate: 0.667, avg_return: 3.1 },
     'portfolios-compare': [
       { portfolio_id: 1, name: 'Growth', curve: [{ date: '2026-06-01', value: 100000 }] },
       { portfolio_id: 2, name: 'Safe', curve: [{ date: '2026-06-01', value: 50000 }] },
@@ -72,6 +73,7 @@ describe('PortfoliosPage', () => {
     expect(screen.getByText('-2%')).toBeInTheDocument()
     expect(screen.getByText(/Strategy: Momentum/)).toBeInTheDocument()
     expect(await screen.findByTestId('line-compare-chart')).toBeInTheDocument() // comparison
+    expect(await screen.findByText(/call accuracy \(30d\): 67% of 12/i)).toBeInTheDocument()
   })
 
   it('shows the empty state without portfolios', async () => {

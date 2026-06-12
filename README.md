@@ -62,6 +62,34 @@ Milestones 1-2 are implemented:
   screeners: day gainers / most actives / small-cap gainers) + history sync
 - Settings page: risk/markets/strategy-switch mode, Telegram link, re-scan
 
+**M5 — Hardening**
+- Outcome tracker (daily 06:00): fills 30-day signed returns on past BUY/SELL
+  calls; hit-rate + average-return stats shown on the dashboard
+- Degradation paths: LLM down → technical-only scoring (Null provider);
+  dead sentiment sources/screeners are skipped; failed scans recorded
+- Disclaimers on all recommendation surfaces
+
+## Operations runbook
+
+| Job | Schedule (Asia/Jerusalem) | What it does |
+|---|---|---|
+| `daily_pipeline` | Mon-Fri 23:45 | price refresh → indicators+sentiment → scores → per-portfolio recommendations → Telegram digests |
+| `weekly_strategy` | Sun 08:00 | 10-month-train / 2-month-test evaluation → per-portfolio strategy reassignment (per user setting) |
+| `outcome_tracker` | daily 06:00 | fills `outcome_30d` on month-old recommendations |
+
+Manual triggers (all available in the UI): `POST /analysis/run`,
+`POST /strategies/evaluate`, `POST /scans`,
+`POST /portfolios/{id}/recommendations/generate`.
+
+Degradation behavior: with no `GROQ_API_KEY` the pipeline runs technical-only
+(sentiment and deep dives disabled); with no `TELEGRAM_BOT_TOKEN` notifications
+stay in-app only. yfinance failures retry with backoff and skip dead symbols.
+
+Known limits (free-data v1): TA-125 seed list is a partial snapshot — run
+`scripts.validate_tase_coverage` and prune; Yahoo rate limits make the first
+full history backfill slow; benchmark-index comparison (vs S&P 500 / TA-125)
+is not yet wired into the performance charts.
+
 ## Quick start (Docker)
 
 ```bash

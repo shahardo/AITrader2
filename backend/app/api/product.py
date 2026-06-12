@@ -193,6 +193,14 @@ def trigger_scan(db: Session = Depends(get_db), user: User = Depends(get_current
     return ScanOut.model_validate(scan)
 
 
+@router.get("/stats/hit-rate")
+def hit_rate(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict:
+    """Return the user's recommendation accuracy (30-day outcomes)."""
+    from app.jobs.outcomes import hit_rate_stats
+
+    return hit_rate_stats(db, user.id)
+
+
 @router.get("/scans/latest", response_model=ScanOut | None)
 def latest_scan(db: Session = Depends(get_db), _user=Depends(get_current_user)
                 ) -> ScanOut | None:

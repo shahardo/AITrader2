@@ -36,7 +36,13 @@ celery_app.conf.beat_schedule = {
         "task": "app.jobs.weekly_strategy",
         "schedule": crontab(hour=8, minute=0, day_of_week="sun"),
     },
+    # Daily 06:00 — fill 30-day outcomes on month-old recommendations.
+    "outcome-tracker": {
+        "task": "app.jobs.outcome_tracker",
+        "schedule": crontab(hour=6, minute=0),
+    },
 }
 
 celery_app.autodiscover_tasks(["app.jobs"])
-import app.jobs.pipelines  # noqa: E402,F401 — register pipeline tasks with the worker
+import app.jobs.outcomes  # noqa: E402,F401 — register tasks with the worker
+import app.jobs.pipelines  # noqa: E402,F401

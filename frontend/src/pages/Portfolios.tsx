@@ -10,6 +10,7 @@ import {
   comparePortfolios,
   createPortfolio,
   deletePortfolio,
+  getHitRate,
   getInitialProposal,
   getPortfolio,
   listPortfolios,
@@ -197,9 +198,20 @@ export default function PortfoliosPage() {
     queryClient.invalidateQueries({ queryKey: ['portfolio'] })
   }
 
+  const hitRate = useQuery({ queryKey: ['hit-rate'], queryFn: getHitRate })
+
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-4 text-2xl font-bold">Portfolios</h1>
+      <div className="mb-4 flex items-baseline gap-4">
+        <h1 className="text-2xl font-bold">Portfolios</h1>
+        {hitRate.data && hitRate.data.evaluated > 0 && (
+          <span className="ml-auto rounded bg-slate-800 px-3 py-1 text-sm text-slate-300">
+            Call accuracy (30d): {(hitRate.data.hit_rate * 100).toFixed(0)}% of{' '}
+            {hitRate.data.evaluated} · avg {hitRate.data.avg_return >= 0 ? '+' : ''}
+            {hitRate.data.avg_return}%
+          </span>
+        )}
+      </div>
       <CreateForm onDone={refresh} />
 
       {portfolios.isLoading && <p className="text-slate-400">Loading…</p>}

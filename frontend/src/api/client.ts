@@ -491,6 +491,18 @@ export function triggerScan(): Promise<ScanOut> {
   return request<ScanOut>('/scans', { method: 'POST' })
 }
 
+export interface HitRateStats {
+  evaluated: number
+  hits: number
+  hit_rate: number
+  avg_return: number
+}
+
+/** Fetch recommendation accuracy stats (30-day outcomes). */
+export function getHitRate(): Promise<HitRateStats> {
+  return request<HitRateStats>('/stats/hit-rate')
+}
+
 /** Fetch the latest scan record. */
 export function getLatestScan(): Promise<ScanOut | null> {
   return request<ScanOut | null>('/scans/latest')
