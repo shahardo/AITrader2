@@ -143,8 +143,19 @@ single typed fetch client whose interfaces mirror the backend Pydantic schemas, 
 token storage (`getTokens`/`clearTokens`, localStorage). `App.tsx` defines the route table and
 a `RequireAuth` guard that redirects to `/login` when no tokens are stored. Pages map ~1:1 to
 backend domains (Portfolios, Recommendations, StrategyLab, Universe, Scores, Topics, Settings,
-StockDetail, Login). Charts use `lightweight-charts` (`CandleChart` — candles + trend channel +
-S/R overlays) and a custom `LineCompareChart` for normalized equity-curve comparisons.
+StockDetail, Login, Onboarding). Charts use `lightweight-charts` (`CandleChart` — candles +
+trend channel + S/R overlays) and a custom `LineCompareChart` for normalized equity-curve
+comparisons.
+
+### Onboarding (`app/api/onboarding.py`, `frontend/src/pages/Onboarding.tsx`)
+
+`GET /onboarding/status` reports first-login setup progress (universe/prices/scores are
+global checks; portfolio/recommendations are scoped to the user). After login the frontend
+redirects to the `/onboarding` wizard while `complete` is false, unless the account
+dismissed it (`isOnboardingDismissed`/`dismissOnboarding` in `api/client.ts`, localStorage
+keyed by email). The wizard derives its starting step from the status flags (already-done
+steps are skipped) and reuses existing endpoints per step: `PATCH /me` → `POST /scans` →
+`POST /analysis/run` → `POST /portfolios` → initial-proposal generate/approve.
 
 ### Testing conventions
 

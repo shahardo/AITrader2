@@ -68,6 +68,10 @@ Milestones 1-2 are implemented:
 - Degradation paths: LLM down → technical-only scoring (Null provider);
   dead sentiment sources/screeners are skipped; failed scans recorded
 - Disclaimers on all recommendation surfaces
+- First-login onboarding wizard (`/onboarding`): guides new users through
+  profile setup → universe load → first analysis → portfolio creation → initial
+  recommendations, skipping steps already done (`GET /onboarding/status`);
+  login redirects there until setup is complete or the wizard is skipped
 
 ## Operations runbook
 
@@ -110,6 +114,9 @@ Populate the universe and price history (first run takes a while on free Yahoo d
 ```bash
 docker compose exec api python -m scripts.load_universe
 ```
+
+Alternatively, just sign up in the web app: the first-login onboarding wizard can load
+the universe, run the first analysis, and set up your first portfolio from the UI.
 
 Validate TASE coverage on Yahoo (Milestone 1 go/no-go check):
 

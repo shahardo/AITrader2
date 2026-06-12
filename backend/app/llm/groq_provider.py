@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 TIER_MODELS = {
     ModelTier.bulk: "meta-llama/llama-4-scout-17b-16e-instruct",
-    ModelTier.deep: "meta-llama/llama-4-maverick-17b-128e-instruct",
+    ModelTier.deep: "meta-llama/llama-4-scout-17b-16e-instruct",
 }
 
 

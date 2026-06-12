@@ -120,6 +120,18 @@ export function clearTokens(): void {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+const ONBOARDING_DISMISS_KEY = 'aitrader2.onboarding.dismissed'
+
+/** Whether this account chose to skip the first-login setup wizard. */
+export function isOnboardingDismissed(email: string): boolean {
+  return localStorage.getItem(`${ONBOARDING_DISMISS_KEY}.${email}`) === '1'
+}
+
+/** Remember that this account skipped the setup wizard. */
+export function dismissOnboarding(email: string): void {
+  localStorage.setItem(`${ONBOARDING_DISMISS_KEY}.${email}`, '1')
+}
+
 export class ApiError extends Error {
   status: number
 
@@ -508,10 +520,26 @@ export function getLatestScan(): Promise<ScanOut | null> {
   return request<ScanOut | null>('/scans/latest')
 }
 
-/** Trigger a synchronous analysis run for selected symbols. */
+/** Trigger a synchronous analysis run for selected symbols (or the whole universe). */
 export function runAnalysis(params: {
-  symbols: string[]
+  symbols?: string[]
   with_sentiment: boolean
+  limit?: number
 }): Promise<{ analyzed: number; scores: Record<string, number> }> {
   return request('/analysis/run', { method: 'POST', body: JSON.stringify(params) })
+}
+
+export interface OnboardingStatus {
+  universe_loaded: boolean
+  instrument_count: number
+  prices_loaded: boolean
+  scores_ready: boolean
+  has_portfolio: boolean
+  has_recommendations: boolean
+  complete: boolean
+}
+
+/** Fetch first-login setup progress for the onboarding wizard. */
+export function getOnboardingStatus(): Promise<OnboardingStatus> {
+  return request<OnboardingStatus>('/onboarding/status')
 }

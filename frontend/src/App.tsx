@@ -6,6 +6,7 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-r
 import { clearTokens, getTokens } from './api/client'
 import NotificationBell from './components/NotificationBell'
 import LoginPage from './pages/Login'
+import OnboardingPage from './pages/Onboarding'
 import PortfoliosPage from './pages/Portfolios'
 import RecommendationsPage from './pages/Recommendations'
 import ScoresPage from './pages/Scores'
@@ -73,6 +74,14 @@ export default function App() {
       <NavBar />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/onboarding"
+          element={
+            <RequireAuth>
+              <OnboardingPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/"
           element={

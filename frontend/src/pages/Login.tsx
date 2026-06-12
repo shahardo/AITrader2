@@ -3,7 +3,13 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError, login, signup } from '../api/client'
+import {
+  ApiError,
+  getOnboardingStatus,
+  isOnboardingDismissed,
+  login,
+  signup,
+} from '../api/client'
 
 /** Login & signup form page. */
 export default function LoginPage() {
@@ -21,7 +27,16 @@ export default function LoginPage() {
     setBusy(true)
     try {
       await (mode === 'login' ? login(email, password) : signup(email, password))
-      navigate('/universe')
+      let destination = '/universe'
+      if (!isOnboardingDismissed(email)) {
+        try {
+          const status = await getOnboardingStatus()
+          if (!status.complete) destination = '/onboarding'
+        } catch {
+          /* status check failed — enter the app normally */
+        }
+      }
+      navigate(destination)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong')
     } finally {
