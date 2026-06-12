@@ -1,0 +1,17 @@
+{
+  "title": "Recommendations",
+  "portfolioAriaLabel": "Portfolio",
+  "generate": "Generate now",
+  "generating": "Analyzing…",
+  "generateError": "Generation failed — does this portfolio have a strategy assigned?",
+  "noPortfolios": "Create a portfolio first.",
+  "pending": "Pending ({{count}})",
+  "pendingEmpty": "Nothing awaiting approval.",
+  "history": "History",
+  "historyEmpty": "No history yet.",
+  "card": {
+    "priceConfidence": "@ {{price}} · confidence {{confidence}}%",
+    "approve": "Approve & execute",
+    "reject": "Reject"
+  }
+}

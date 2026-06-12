@@ -1,0 +1,22 @@
+{
+  "title": "Universe",
+  "searchPlaceholder": "Search symbol or name…",
+  "exchangeFilterAriaLabel": "Exchange filter",
+  "exchangeOptions": {
+    "all": "All exchanges",
+    "us": "US",
+    "tase": "TASE"
+  },
+  "loading": "Loading universe…",
+  "error": "Failed to load instruments",
+  "empty": "No instruments yet — run the universe loader (see README) to populate it.",
+  "table": {
+    "symbol": "Symbol",
+    "name": "Name",
+    "exchange": "Exchange",
+    "sector": "Sector",
+    "lastClose": "Last close",
+    "asOf": "As of",
+    "historyBars": "History (bars)"
+  }
+}

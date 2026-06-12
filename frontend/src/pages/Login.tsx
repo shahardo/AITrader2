@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   ApiError,
   getOnboardingStatus,
@@ -10,15 +11,23 @@ import {
   login,
   signup,
 } from '../api/client'
+import { useTheme } from '../contexts/ThemeContext'
 
 /** Login & signup form page. */
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { scheme, toggleScheme } = useTheme()
+  const { t, i18n } = useTranslation(['login', 'common'])
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  /** Toggle the UI language between English and Hebrew. */
+  function toggleLanguage() {
+    void i18n.changeLanguage(i18n.language === 'he' ? 'en' : 'he')
+  }
 
   /** Submit credentials to the API for the selected mode. */
   async function handleSubmit(e: React.FormEvent) {
@@ -38,7 +47,7 @@ export default function LoginPage() {
       }
       navigate(destination)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong')
+      setError(err instanceof ApiError ? err.message : t('errors.somethingWrong'))
     } finally {
       setBusy(false)
     }
@@ -48,47 +57,63 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center">
       <form
         onSubmit={handleSubmit}
-        className="w-80 space-y-4 rounded-lg border border-slate-800 bg-slate-900 p-6"
+        className="w-80 space-y-4 rounded-lg border border-edge bg-panel p-6"
       >
-        <h1 className="text-xl font-bold text-emerald-400">AITrader2</h1>
-        <p className="text-xs text-slate-400">
-          AI stock analysis & paper trading. Not financial advice.
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={toggleScheme}
+            className="flex-1 rounded bg-panel-2 px-2 py-1 text-xs hover:bg-panel-3"
+          >
+            {scheme === 'dark' ? t('common:theme.switchToLight') : t('common:theme.switchToDark')}
+          </button>
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="flex-1 rounded bg-panel-2 px-2 py-1 text-xs hover:bg-panel-3"
+          >
+            {i18n.language === 'he' ? t('common:language.en') : t('common:language.he')}
+          </button>
+        </div>
+        <h1 className="text-xl font-bold text-accent">{t('common:appName')}</h1>
+        <p className="text-xs text-ink-3">
+          {t('tagline')} {t('common:disclaimerShort')}
         </p>
         <label className="block text-sm">
-          Email
+          {t('fields.email')}
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+            className="mt-1 w-full rounded border border-edge-2 bg-panel-2 px-2 py-1"
           />
         </label>
         <label className="block text-sm">
-          Password
+          {t('fields.password')}
           <input
             type="password"
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+            className="mt-1 w-full rounded border border-edge-2 bg-panel-2 px-2 py-1"
           />
         </label>
-        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-negative">{error}</p>}
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded bg-emerald-600 py-2 font-semibold hover:bg-emerald-500 disabled:opacity-50"
+          className="w-full rounded bg-accent-button py-2 font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
-          {mode === 'login' ? 'Log in' : 'Create account'}
+          {mode === 'login' ? t('actions.logIn') : t('actions.createAccount')}
         </button>
         <button
           type="button"
-          className="w-full text-sm text-slate-400 hover:text-white"
+          className="w-full text-sm text-ink-3 hover:text-ink"
           onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
         >
-          {mode === 'login' ? 'New here? Create an account' : 'Have an account? Log in'}
+          {mode === 'login' ? t('toggle.toSignup') : t('toggle.toLogin')}
         </button>
       </form>
     </div>

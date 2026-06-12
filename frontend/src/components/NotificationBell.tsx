@@ -3,10 +3,12 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { listNotifications, markNotificationRead } from '../api/client'
 
 /** Bell button + dropdown notification feed. */
 export default function NotificationBell() {
+  const { t } = useTranslation('common')
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const notifications = useQuery({
@@ -24,33 +26,33 @@ export default function NotificationBell() {
   return (
     <div className="relative">
       <button
-        aria-label="Notifications"
+        aria-label={t('notifications.ariaLabel')}
         onClick={() => setOpen(!open)}
-        className="relative rounded bg-slate-800 px-3 py-1 text-sm hover:bg-slate-700"
+        className="relative rounded bg-panel-2 px-3 py-1 text-sm hover:bg-panel-3"
       >
         🔔
         {unread > 0 && (
-          <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 text-xs font-bold">
+          <span className="absolute -end-1 -top-1 rounded-full bg-red-500 px-1.5 text-xs font-bold">
             {unread}
           </span>
         )}
       </button>
       {open && (
-        <div className="absolute left-0 z-10 mt-2 max-h-96 w-96 overflow-y-auto rounded border border-slate-700 bg-slate-900 shadow-xl">
+        <div className="absolute start-0 z-10 mt-2 max-h-96 w-96 overflow-y-auto rounded border border-edge-2 bg-panel shadow-xl">
           {(notifications.data?.length ?? 0) === 0 && (
-            <p className="p-3 text-sm text-slate-400">No notifications yet.</p>
+            <p className="p-3 text-sm text-ink-3">{t('notifications.empty')}</p>
           )}
           {notifications.data?.map((n) => (
             <button
               key={n.id}
               onClick={() => !n.read && markRead.mutate(n.id)}
-              className={`block w-full border-b border-slate-800 p-3 text-left text-sm hover:bg-slate-800 ${
+              className={`block w-full border-b border-edge p-3 text-start text-sm hover:bg-panel-2 ${
                 n.read ? 'opacity-60' : ''
               }`}
             >
               <p className="font-semibold">{n.title}</p>
-              {n.body && <p className="mt-1 whitespace-pre-line text-xs text-slate-400">{n.body}</p>}
-              <p className="mt-1 text-xs text-slate-600">
+              {n.body && <p className="mt-1 whitespace-pre-line text-xs text-ink-3">{n.body}</p>}
+              <p className="mt-1 text-xs text-ink-5">
                 {new Date(n.created_at).toLocaleString()}
               </p>
             </button>

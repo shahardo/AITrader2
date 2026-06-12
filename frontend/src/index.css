@@ -1,6 +1,260 @@
-/* index.css — global styles: Tailwind entrypoint and base page colors. */
+/* index.css — global styles: Tailwind entrypoint, theme tokens (light/dark +
+   per-section accent palette), and base page colors. */
 @import 'tailwindcss';
 
+/* Map semantic design tokens to Tailwind utilities (bg-*, text-*, border-*, ...).
+   The actual colors live in CSS custom properties below so they can change
+   with the .dark/.light class and the [data-section] attribute on <html>. */
+@theme {
+  --color-app: var(--c-app);
+  --color-panel: var(--c-panel);
+  --color-panel-2: var(--c-panel-2);
+  --color-panel-3: var(--c-panel-3);
+  --color-edge: var(--c-edge);
+  --color-edge-2: var(--c-edge-2);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+  --color-ink-4: var(--c-ink-4);
+  --color-ink-5: var(--c-ink-5);
+
+  --color-accent: var(--c-accent);
+  --color-accent-link: var(--c-accent-link);
+  --color-accent-button: var(--c-accent-button);
+  --color-accent-button-hover: var(--c-accent-button-hover);
+  --color-accent-badge: var(--c-accent-badge);
+  --color-accent-pill: var(--c-accent-pill);
+  --color-accent-pill-border: var(--c-accent-pill-border);
+
+  --color-positive: var(--c-positive);
+  --color-positive-soft: var(--c-positive-soft);
+  --color-positive-soft-text: var(--c-positive-soft-text);
+  --color-negative: var(--c-negative);
+  --color-negative-soft: var(--c-negative-soft);
+  --color-negative-soft-text: var(--c-negative-soft-text);
+  --color-warning: var(--c-warning);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Base surface/text tokens — dark is the default (no class required) so   */
+/* the first paint before ThemeProvider runs matches the existing look.    */
+/* ---------------------------------------------------------------------- */
+:root,
+.dark {
+  color-scheme: dark;
+
+  --c-app: #020617;
+  --c-panel: #0f172a;
+  --c-panel-2: #1e293b;
+  --c-panel-3: #334155;
+  --c-edge: #1e293b;
+  --c-edge-2: #334155;
+  --c-ink: #f1f5f9;
+  --c-ink-2: #cbd5e1;
+  --c-ink-3: #94a3b8;
+  --c-ink-4: #64748b;
+  --c-ink-5: #475569;
+
+  --c-positive: #34d399;
+  --c-positive-soft: #064e3b;
+  --c-positive-soft-text: #6ee7b7;
+  --c-negative: #f87171;
+  --c-negative-soft: #7f1d1d;
+  --c-negative-soft-text: #fca5a5;
+  --c-warning: #fbbf24;
+
+  /* Chart-only: trend-channel overlay line (read via cssVar, no @theme utility) */
+  --c-chart-line: #38bdf8;
+
+  /* Default accent (Portfolios / login / onboarding): emerald */
+  --c-accent: #34d399;
+  --c-accent-link: #6ee7b7;
+  --c-accent-button: #059669;
+  --c-accent-button-hover: #10b981;
+  --c-accent-badge: #064e3b;
+  --c-accent-pill: #022c22;
+  --c-accent-pill-border: #047857;
+}
+
+.light {
+  color-scheme: light;
+
+  --c-app: #f8fafc;
+  --c-panel: #ffffff;
+  --c-panel-2: #f1f5f9;
+  --c-panel-3: #e2e8f0;
+  --c-edge: #e2e8f0;
+  --c-edge-2: #cbd5e1;
+  --c-ink: #0f172a;
+  --c-ink-2: #475569;
+  --c-ink-3: #64748b;
+  --c-ink-4: #94a3b8;
+  --c-ink-5: #cbd5e1;
+
+  --c-positive: #059669;
+  --c-positive-soft: #d1fae5;
+  --c-positive-soft-text: #047857;
+  --c-negative: #dc2626;
+  --c-negative-soft: #fee2e2;
+  --c-negative-soft-text: #b91c1c;
+  --c-warning: #d97706;
+
+  --c-chart-line: #0284c7;
+
+  --c-accent: #059669;
+  --c-accent-link: #047857;
+  --c-accent-button: #059669;
+  --c-accent-button-hover: #047857;
+  --c-accent-badge: #d1fae5;
+  --c-accent-pill: #ecfdf5;
+  --c-accent-pill-border: #6ee7b7;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Per-section accent palettes. Each nav destination gets a distinct hue;  */
+/* set via document.documentElement.dataset.section (see ThemeContext).   */
+/* ---------------------------------------------------------------------- */
+
+/* Recommendations: blue */
+.dark[data-section='recommendations'] {
+  --c-accent: #60a5fa;
+  --c-accent-link: #93c5fd;
+  --c-accent-button: #2563eb;
+  --c-accent-button-hover: #3b82f6;
+  --c-accent-badge: #1e3a8a;
+  --c-accent-pill: #172554;
+  --c-accent-pill-border: #1d4ed8;
+}
+.light[data-section='recommendations'] {
+  --c-accent: #2563eb;
+  --c-accent-link: #1d4ed8;
+  --c-accent-button: #2563eb;
+  --c-accent-button-hover: #1d4ed8;
+  --c-accent-badge: #dbeafe;
+  --c-accent-pill: #eff6ff;
+  --c-accent-pill-border: #93c5fd;
+}
+
+/* Strategy Lab: violet */
+.dark[data-section='strategies'] {
+  --c-accent: #a78bfa;
+  --c-accent-link: #c4b5fd;
+  --c-accent-button: #7c3aed;
+  --c-accent-button-hover: #8b5cf6;
+  --c-accent-badge: #4c1d95;
+  --c-accent-pill: #2e1065;
+  --c-accent-pill-border: #6d28d9;
+}
+.light[data-section='strategies'] {
+  --c-accent: #7c3aed;
+  --c-accent-link: #6d28d9;
+  --c-accent-button: #7c3aed;
+  --c-accent-button-hover: #6d28d9;
+  --c-accent-badge: #ede9fe;
+  --c-accent-pill: #f5f3ff;
+  --c-accent-pill-border: #c4b5fd;
+}
+
+/* Universe: amber */
+.dark[data-section='universe'] {
+  --c-accent: #fbbf24;
+  --c-accent-link: #fcd34d;
+  --c-accent-button: #d97706;
+  --c-accent-button-hover: #f59e0b;
+  --c-accent-badge: #78350f;
+  --c-accent-pill: #451a03;
+  --c-accent-pill-border: #b45309;
+}
+.light[data-section='universe'] {
+  --c-accent: #d97706;
+  --c-accent-link: #b45309;
+  --c-accent-button: #d97706;
+  --c-accent-button-hover: #b45309;
+  --c-accent-badge: #fef3c7;
+  --c-accent-pill: #fffbeb;
+  --c-accent-pill-border: #fcd34d;
+}
+
+/* Scores: cyan */
+.dark[data-section='scores'] {
+  --c-accent: #22d3ee;
+  --c-accent-link: #67e8f9;
+  --c-accent-button: #0891b2;
+  --c-accent-button-hover: #06b6d4;
+  --c-accent-badge: #164e63;
+  --c-accent-pill: #083344;
+  --c-accent-pill-border: #0e7490;
+}
+.light[data-section='scores'] {
+  --c-accent: #0891b2;
+  --c-accent-link: #0e7490;
+  --c-accent-button: #0891b2;
+  --c-accent-button-hover: #0e7490;
+  --c-accent-badge: #cffafe;
+  --c-accent-pill: #ecfeff;
+  --c-accent-pill-border: #67e8f9;
+}
+
+/* Topics: rose */
+.dark[data-section='topics'] {
+  --c-accent: #fb7185;
+  --c-accent-link: #fda4af;
+  --c-accent-button: #e11d48;
+  --c-accent-button-hover: #f43f5e;
+  --c-accent-badge: #881337;
+  --c-accent-pill: #4c0519;
+  --c-accent-pill-border: #be123c;
+}
+.light[data-section='topics'] {
+  --c-accent: #e11d48;
+  --c-accent-link: #be123c;
+  --c-accent-button: #e11d48;
+  --c-accent-button-hover: #be123c;
+  --c-accent-badge: #ffe4e6;
+  --c-accent-pill: #fff1f2;
+  --c-accent-pill-border: #fda4af;
+}
+
+/* Settings: orange */
+.dark[data-section='settings'] {
+  --c-accent: #fb923c;
+  --c-accent-link: #fdba74;
+  --c-accent-button: #ea580c;
+  --c-accent-button-hover: #f97316;
+  --c-accent-badge: #7c2d12;
+  --c-accent-pill: #431407;
+  --c-accent-pill-border: #c2410c;
+}
+.light[data-section='settings'] {
+  --c-accent: #ea580c;
+  --c-accent-link: #c2410c;
+  --c-accent-button: #ea580c;
+  --c-accent-button-hover: #c2410c;
+  --c-accent-badge: #ffedd5;
+  --c-accent-pill: #fff7ed;
+  --c-accent-pill-border: #fdba74;
+}
+
+/* Stock detail: teal */
+.dark[data-section='stock-detail'] {
+  --c-accent: #2dd4bf;
+  --c-accent-link: #5eead4;
+  --c-accent-button: #0d9488;
+  --c-accent-button-hover: #14b8a6;
+  --c-accent-badge: #134e4a;
+  --c-accent-pill: #042f2e;
+  --c-accent-pill-border: #0f766e;
+}
+.light[data-section='stock-detail'] {
+  --c-accent: #0d9488;
+  --c-accent-link: #0f766e;
+  --c-accent-button: #0d9488;
+  --c-accent-button-hover: #0f766e;
+  --c-accent-badge: #ccfbf1;
+  --c-accent-pill: #f0fdfa;
+  --c-accent-pill-border: #5eead4;
+}
+
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-app text-ink antialiased;
 }

@@ -1,0 +1,38 @@
+{
+  "title": "תיקים",
+  "hitRate": "דיוק תחזיות (30 יום): {{pct}}% מתוך {{n}} · בממוצע {{sign}}{{avg}}%",
+  "loading": "טוען…",
+  "empty": "אין עדיין תיקים — צרו את התיק הראשון שלכם למעלה.",
+  "createForm": {
+    "name": "שם",
+    "capital": "הון וירטואלי",
+    "strategy": "אסטרטגיה",
+    "pickLater": "— לבחור מאוחר יותר —",
+    "autoExecute": "ביצוע עסקאות אוטומטי",
+    "submit": "יצירת תיק",
+    "error": "יצירת התיק נכשלה"
+  },
+  "proposal": {
+    "propose": "הצע תיק התחלתי",
+    "building": "מכין הצעה…",
+    "error": "אין עדיין ציוני יקום — הריצו ניתוח בעמוד הציונים תחילה",
+    "proposedPositions": "פוזיציות פתיחה מוצעות:",
+    "priceConfidence": "@ {{price}} · רמת ביטחון {{confidence}}%",
+    "approve": "אישור ופתיחת פוזיציות"
+  },
+  "card": {
+    "delete": "מחיקה",
+    "deleteAriaLabel": "מחיקת {{name}}",
+    "strategyLine": "אסטרטגיה: {{name}} · מזומן {{cash}} · {{mode}}",
+    "strategyNone": "ללא",
+    "modeAuto": "מסחר אוטומטי",
+    "modeManual": "אישור ידני",
+    "holdings": "אחזקות",
+    "hideHoldings": "הסתר אחזקות",
+    "recommendations": "המלצות",
+    "noPositions": "אין עדיין פוזיציות."
+  },
+  "comparison": {
+    "title": "השוואת ביצועים (מנורמל ל-100)"
+  }
+}

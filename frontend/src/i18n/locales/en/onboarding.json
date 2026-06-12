@@ -1,0 +1,74 @@
+{
+  "steps": [
+    "Your profile",
+    "Load the universe",
+    "Run the first analysis",
+    "Create a portfolio",
+    "First recommendations",
+    "All set"
+  ],
+  "errors": {
+    "somethingWrong": "Something went wrong"
+  },
+  "welcome": {
+    "heading": "Welcome to AITrader2",
+    "subtitle": "A few steps to get your paper-trading research workspace ready. Not financial advice.",
+    "signedInAs": "Signed in as {{email}}"
+  },
+  "profile": {
+    "heading": "Your profile",
+    "description": "Risk level and markets shape which strategies and stocks you are offered.",
+    "riskLevel": "Risk level",
+    "riskOptions": {
+      "conservative": "Conservative",
+      "balanced": "Balanced",
+      "aggressive": "Aggressive"
+    },
+    "markets": "Markets",
+    "marketOptions": {
+      "us": "US only",
+      "tase": "Israel (TASE) only",
+      "both": "US + TASE"
+    },
+    "saveAndContinue": "Save & continue"
+  },
+  "universe": {
+    "heading": "Load the universe",
+    "alreadyLoaded": "Universe already loaded — {{count}} instruments tracked.",
+    "continue": "Continue",
+    "description": "Downloads S&P 500, Nasdaq-100 and TA-125 constituents plus their price history. This can take several minutes — leave the tab open.",
+    "loading": "Loading universe…",
+    "loadNow": "Load universe now"
+  },
+  "analysis": {
+    "heading": "Run the first analysis",
+    "alreadyComputed": "Scores already computed — the leaderboard is ready.",
+    "continue": "Continue",
+    "description": "Scores a first batch of stocks (technical indicators + news sentiment) so recommendations have something to rank. The nightly pipeline covers the rest of the universe.",
+    "analyzing": "Analyzing…",
+    "runFirst": "Run first analysis"
+  },
+  "portfolio": {
+    "heading": "Create a portfolio",
+    "pickExisting": "Pick an existing portfolio:",
+    "orCreateNew": "…or create a new one:",
+    "name": "Name",
+    "startingCapital": "Starting capital ($)",
+    "create": "Create portfolio"
+  },
+  "recommendations": {
+    "heading": "First recommendations",
+    "description": "Generate an initial portfolio proposal: BUY recommendations sized to your capital, drawn from today's top-ranked stocks.",
+    "generating": "Generating…",
+    "generate": "Generate recommendations",
+    "confidence": "({{percent}}% confidence)",
+    "approveAndExecute": "Approve all & execute",
+    "decideLater": "Decide later"
+  },
+  "done": {
+    "heading": "All set 🎉",
+    "description": "Your workspace is ready. The nightly pipeline keeps prices, scores and recommendations fresh; visit the Strategy Lab to compare strategies, or Settings to link Telegram notifications.",
+    "goToDashboard": "Go to dashboard"
+  },
+  "skip": "Skip setup — I'll explore on my own"
+}

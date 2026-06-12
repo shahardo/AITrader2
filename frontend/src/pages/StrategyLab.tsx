@@ -3,6 +3,7 @@
 // trade-by-trade decision log showing which signals triggered each trade.
 
 import { useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   evaluateStrategies,
@@ -15,15 +16,24 @@ import LineCompareChart from '../components/LineCompareChart'
 
 /** Format a metrics dict into compact text. */
 function Metrics({ label, metrics }: { label: string; metrics: Record<string, number> }) {
+  const { t } = useTranslation('strategyLab')
   return (
-    <div className="rounded bg-slate-800 p-2 text-xs">
-      <p className="mb-1 font-semibold text-slate-300">{label}</p>
+    <div className="rounded bg-panel-2 p-2 text-xs">
+      <p className="mb-1 font-semibold text-ink-2">{label}</p>
       <p>
-        Sharpe <strong>{metrics.sharpe?.toFixed(2) ?? '—'}</strong> · CAGR{' '}
-        {metrics.cagr != null ? `${(metrics.cagr * 100).toFixed(1)}%` : '—'} · MaxDD{' '}
-        {metrics.max_drawdown != null ? `${(metrics.max_drawdown * 100).toFixed(1)}%` : '—'} · win{' '}
-        {metrics.win_rate != null ? `${(metrics.win_rate * 100).toFixed(0)}%` : '—'} ·{' '}
-        {metrics.trade_count ?? 0} trades
+        <Trans
+          t={t}
+          i18nKey="metrics.summary"
+          values={{
+            sharpe: metrics.sharpe?.toFixed(2) ?? '—',
+            cagr: metrics.cagr != null ? `${(metrics.cagr * 100).toFixed(1)}%` : '—',
+            maxDrawdown:
+              metrics.max_drawdown != null ? `${(metrics.max_drawdown * 100).toFixed(1)}%` : '—',
+            winRate: metrics.win_rate != null ? `${(metrics.win_rate * 100).toFixed(0)}%` : '—',
+            count: metrics.trade_count ?? 0,
+          }}
+          components={{ strong: <strong /> }}
+        />
       </p>
     </div>
   )
@@ -31,19 +41,25 @@ function Metrics({ label, metrics }: { label: string; metrics: Record<string, nu
 
 /** Drill-down into one run: equity curve + trade log. */
 function RunDetail({ run }: { run: StrategyRunOut }) {
+  const { t } = useTranslation('strategyLab')
   const trades = useQuery({
     queryKey: ['run-trades', run.id],
     queryFn: () => listRunTrades(run.id),
   })
   return (
-    <div className="mt-3 space-y-3 border-t border-slate-800 pt-3">
-      <p className="text-xs text-slate-400">
-        Train {run.train_start} → {run.train_end} · Test (out-of-sample) {run.test_start} →{' '}
-        {run.test_end} · params {JSON.stringify(run.chosen_params)}
+    <div className="mt-3 space-y-3 border-t border-edge pt-3">
+      <p className="text-xs text-ink-3">
+        {t('detail.summary', {
+          trainStart: run.train_start,
+          trainEnd: run.train_end,
+          testStart: run.test_start,
+          testEnd: run.test_end,
+          params: JSON.stringify(run.chosen_params),
+        })}
       </p>
       <div className="grid grid-cols-2 gap-2">
-        <Metrics label="Train (in-sample)" metrics={run.train_metrics} />
-        <Metrics label="Test (out-of-sample — drives selection)" metrics={run.test_metrics} />
+        <Metrics label={t('metrics.train')} metrics={run.train_metrics} />
+        <Metrics label={t('metrics.test')} metrics={run.test_metrics} />
       </div>
       {run.equity_curve.length > 1 && (
         <LineCompareChart
@@ -57,39 +73,41 @@ function RunDetail({ run }: { run: StrategyRunOut }) {
           height={200}
         />
       )}
-      <h4 className="text-sm font-semibold">Trades ({trades.data?.length ?? '…'})</h4>
+      <h4 className="text-sm font-semibold">
+        {t('detail.tradesHeading', { count: trades.data?.length ?? '…' })}
+      </h4>
       {trades.data && trades.data.length === 0 && (
-        <p className="text-sm text-slate-400">No trades in the test window.</p>
+        <p className="text-sm text-ink-3">{t('detail.noTrades')}</p>
       )}
       {trades.data && trades.data.length > 0 && (
-        <table className="w-full text-left text-xs">
+        <table className="w-full text-start text-xs">
           <thead>
-            <tr className="border-b border-slate-700 text-slate-400">
-              <th className="py-1">Date</th>
-              <th>Side</th>
-              <th>Symbol</th>
-              <th className="text-right">Qty</th>
-              <th className="text-right">Price</th>
-              <th className="text-right">P&L</th>
-              <th>Triggering signals</th>
+            <tr className="border-b border-edge-2 text-ink-3">
+              <th className="py-1">{t('detail.table.date')}</th>
+              <th>{t('detail.table.side')}</th>
+              <th>{t('detail.table.symbol')}</th>
+              <th className="text-end">{t('detail.table.qty')}</th>
+              <th className="text-end">{t('detail.table.price')}</th>
+              <th className="text-end">{t('detail.table.pnl')}</th>
+              <th>{t('detail.table.triggeringSignals')}</th>
             </tr>
           </thead>
           <tbody>
-            {trades.data.map((t, i) => (
-              <tr key={i} className="border-b border-slate-800">
-                <td className="py-1">{t.date}</td>
-                <td className={t.side === 'BUY' ? 'text-emerald-400' : 'text-red-400'}>
-                  {t.side}
+            {trades.data.map((t2, i) => (
+              <tr key={i} className="border-b border-edge">
+                <td className="py-1">{t2.date}</td>
+                <td className={t2.side === 'BUY' ? 'text-positive' : 'text-negative'}>
+                  {t2.side}
                 </td>
-                <td className="font-mono">{t.symbol}</td>
-                <td className="text-right">{t.qty}</td>
-                <td className="text-right">{t.price.toFixed(2)}</td>
+                <td className="font-mono">{t2.symbol}</td>
+                <td className="text-end">{t2.qty}</td>
+                <td className="text-end">{t2.price.toFixed(2)}</td>
                 <td
-                  className={`text-right ${(t.pnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                  className={`text-end ${(t2.pnl ?? 0) >= 0 ? 'text-positive' : 'text-negative'}`}
                 >
-                  {t.pnl != null ? t.pnl.toFixed(0) : '—'}
+                  {t2.pnl != null ? t2.pnl.toFixed(0) : '—'}
                 </td>
-                <td className="text-slate-400">{JSON.stringify(t.triggering_signals)}</td>
+                <td className="text-ink-3">{JSON.stringify(t2.triggering_signals)}</td>
               </tr>
             ))}
           </tbody>
@@ -111,6 +129,7 @@ function StrategyCard({
   description: string
   riskFit: string
 }) {
+  const { t } = useTranslation('strategyLab')
   const [openRun, setOpenRun] = useState<number | null>(null)
   const runs = useQuery({
     queryKey: ['strategy-runs', strategyId],
@@ -118,30 +137,33 @@ function StrategyCard({
   })
   const latest = runs.data?.[0]
   return (
-    <div className="rounded border border-slate-800 bg-slate-900 p-4">
+    <div className="rounded border border-edge bg-panel p-4">
       <div className="flex items-baseline gap-3">
         <h2 className="font-semibold">{name}</h2>
-        <span className="text-xs text-slate-500">suits {riskFit}</span>
+        <span className="text-xs text-ink-4">{t('card.suits', { riskFit })}</span>
         {latest && (
-          <span className="ml-auto text-xs text-slate-400">
-            latest test Sharpe{' '}
-            <strong className="text-emerald-300">
+          <span className="ms-auto text-xs text-ink-3">
+            {t('card.latestTestSharpe')}{' '}
+            <strong className="text-accent-link">
               {latest.test_metrics.sharpe?.toFixed(2) ?? '—'}
             </strong>
           </span>
         )}
       </div>
-      <p className="mt-1 text-sm text-slate-400">{description}</p>
+      <p className="mt-1 text-sm text-ink-3">{description}</p>
       {runs.data && runs.data.length === 0 && (
-        <p className="mt-2 text-sm text-slate-500">Not evaluated yet.</p>
+        <p className="mt-2 text-sm text-ink-4">{t('card.notEvaluated')}</p>
       )}
       {runs.data?.map((run) => (
         <div key={run.id} className="mt-2">
           <button
             onClick={() => setOpenRun(openRun === run.id ? null : run.id)}
-            className="text-sm text-emerald-300 hover:underline"
+            className="text-sm text-accent-link hover:underline"
           >
-            Run {run.run_date} — test Sharpe {run.test_metrics.sharpe?.toFixed(2) ?? '—'}{' '}
+            {t('card.run', {
+              date: run.run_date,
+              value: run.test_metrics.sharpe?.toFixed(2) ?? '—',
+            })}{' '}
             {openRun === run.id ? '▾' : '▸'}
           </button>
           {openRun === run.id && <RunDetail run={run} />}
@@ -153,6 +175,7 @@ function StrategyCard({
 
 /** Strategy Lab page at /strategies. */
 export default function StrategyLabPage() {
+  const { t } = useTranslation('strategyLab')
   const queryClient = useQueryClient()
   const strategies = useQuery({ queryKey: ['strategies'], queryFn: listStrategies })
   const evaluate = useMutation({
@@ -163,25 +186,22 @@ export default function StrategyLabPage() {
   return (
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-4 flex items-center gap-4">
-        <h1 className="text-2xl font-bold">Strategy Lab</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <button
           onClick={() => evaluate.mutate()}
           disabled={evaluate.isPending}
-          className="ml-auto rounded bg-emerald-600 px-4 py-1.5 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+          className="ms-auto rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
-          {evaluate.isPending ? 'Evaluating (10mo train / 2mo test)…' : 'Re-evaluate strategies'}
+          {evaluate.isPending ? t('actions.evaluating') : t('actions.reevaluate')}
         </button>
       </div>
       {evaluate.error && (
-        <p role="alert" className="mb-3 text-sm text-red-400">
-          Evaluation failed — load price history first (Universe page / data loader)
+        <p role="alert" className="mb-3 text-sm text-negative">
+          {t('errors.evaluationFailed')}
         </p>
       )}
-      <p className="mb-4 text-sm text-slate-400">
-        Each strategy is fitted on the first 10 months of the trailing year and validated on the
-        last 2 months. Only out-of-sample (test) results drive strategy selection.
-      </p>
-      {strategies.isLoading && <p className="text-slate-400">Loading…</p>}
+      <p className="mb-4 text-sm text-ink-3">{t('description')}</p>
+      {strategies.isLoading && <p className="text-ink-3">{t('loading')}</p>}
       <div className="space-y-4">
         {strategies.data?.map((s) => (
           <StrategyCard

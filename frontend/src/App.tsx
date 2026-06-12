@@ -4,7 +4,9 @@
 import type { ReactElement } from 'react'
 import { useEffect } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AUTH_EXPIRED_EVENT, clearTokens, getTokens } from './api/client'
+import { useTheme } from './contexts/ThemeContext'
 import NotificationBell from './components/NotificationBell'
 import LoginPage from './pages/Login'
 import OnboardingPage from './pages/Onboarding'
@@ -26,6 +28,8 @@ function RequireAuth({ children }: { children: ReactElement }) {
 function SideBar() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t, i18n } = useTranslation(['nav', 'common'])
+  const { scheme, toggleScheme } = useTheme()
 
   // When a request's refresh token has also expired, send the user back to login.
   useEffect(() => {
@@ -37,42 +41,64 @@ function SideBar() {
   }, [navigate])
 
   if (location.pathname === '/login') return null
+
+  /** Toggle the UI language between English and Hebrew. */
+  function toggleLanguage() {
+    void i18n.changeLanguage(i18n.language === 'he' ? 'en' : 'he')
+  }
+
   return (
-    <aside className="flex w-56 flex-shrink-0 flex-col gap-1 border-r border-slate-800 bg-slate-900 p-4">
-      <span className="mb-4 text-lg font-bold text-emerald-400">AITrader2</span>
+    <aside className="flex w-56 flex-shrink-0 flex-col gap-1 border-e border-edge bg-panel p-4">
+      <span className="mb-4 text-lg font-bold text-accent">{t('common:appName')}</span>
       <NavLink to="/" end className={navLinkClass}>
-        Portfolios
+        {t('nav:portfolios')}
       </NavLink>
       <NavLink to="/recommendations" className={navLinkClass}>
-        Recommendations
+        {t('nav:recommendations')}
       </NavLink>
       <NavLink to="/strategies" className={navLinkClass}>
-        Strategy Lab
+        {t('nav:strategyLab')}
       </NavLink>
       <NavLink to="/universe" className={navLinkClass}>
-        Universe
+        {t('nav:universe')}
       </NavLink>
       <NavLink to="/scores" className={navLinkClass}>
-        Scores
+        {t('nav:scores')}
       </NavLink>
       <NavLink to="/topics" className={navLinkClass}>
-        Topics
+        {t('nav:topics')}
       </NavLink>
       <NavLink to="/settings" className={navLinkClass}>
-        Settings
+        {t('nav:settings')}
       </NavLink>
       <div className="mt-auto flex flex-col gap-3">
         <NotificationBell />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={toggleScheme}
+            className="flex-1 rounded bg-panel-2 px-2 py-1.5 text-xs hover:bg-panel-3"
+          >
+            {scheme === 'dark' ? t('common:theme.switchToLight') : t('common:theme.switchToDark')}
+          </button>
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="flex-1 rounded bg-panel-2 px-2 py-1.5 text-xs hover:bg-panel-3"
+          >
+            {i18n.language === 'he' ? t('common:language.en') : t('common:language.he')}
+          </button>
+        </div>
         <button
-          className="rounded bg-slate-800 px-3 py-2 text-left text-sm hover:bg-slate-700"
+          className="rounded bg-panel-2 px-3 py-2 text-start text-sm hover:bg-panel-3"
           onClick={() => {
             clearTokens()
             navigate('/login')
           }}
         >
-          Log out
+          {t('common:actions.logout')}
         </button>
-        <p className="text-xs text-slate-500">Not financial advice — paper trading only</p>
+        <p className="text-xs text-ink-4">{t('common:disclaimer')}</p>
       </div>
     </aside>
   )
@@ -81,7 +107,7 @@ function SideBar() {
 /** Style the nav link for the currently active route. */
 function navLinkClass({ isActive }: { isActive: boolean }): string {
   return `rounded px-3 py-2 text-sm ${
-    isActive ? 'bg-slate-800 font-semibold text-emerald-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+    isActive ? 'bg-panel-2 font-semibold text-accent' : 'text-ink-2 hover:bg-panel-2 hover:text-ink'
   }`
 }
 

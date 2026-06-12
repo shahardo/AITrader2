@@ -8,15 +8,18 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import LoginPage from '../pages/Login'
 import { dismissOnboarding, getTokens } from '../api/client'
+import { ThemeProvider } from '../contexts/ThemeContext'
 
 function renderLogin() {
   return render(
     <MemoryRouter initialEntries={['/login']}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/universe" element={<div>UNIVERSE PAGE</div>} />
-        <Route path="/onboarding" element={<div>ONBOARDING PAGE</div>} />
-      </Routes>
+      <ThemeProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/universe" element={<div>UNIVERSE PAGE</div>} />
+          <Route path="/onboarding" element={<div>ONBOARDING PAGE</div>} />
+        </Routes>
+      </ThemeProvider>
     </MemoryRouter>,
   )
 }

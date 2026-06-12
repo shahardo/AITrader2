@@ -1,0 +1,41 @@
+{
+  "title": "Settings",
+  "loading": "Loading…",
+  "profile": {
+    "heading": "Profile",
+    "riskLevel": "Risk level",
+    "riskOptions": {
+      "conservative": "Conservative",
+      "balanced": "Balanced",
+      "aggressive": "Aggressive"
+    },
+    "markets": "Markets",
+    "marketsOptions": {
+      "us": "US only",
+      "tase": "TASE only",
+      "both": "US + TASE"
+    },
+    "strategySwitchMode": "Weekly strategy switches",
+    "strategySwitchOptions": {
+      "approve": "Ask for my approval",
+      "auto": "Apply automatically"
+    }
+  },
+  "telegram": {
+    "heading": "Telegram notifications",
+    "linked": "Linked ✓ — daily digests enabled.",
+    "instructions": "Open the bot in Telegram and send:",
+    "command": "/start {{code}}",
+    "checkLink": "I sent it — check link",
+    "notSeenYet": "Not seen yet — try again in a few seconds.",
+    "linkTelegram": "Link Telegram"
+  },
+  "scan": {
+    "heading": "Universe scan",
+    "description": "Re-runs the full scan: index constituents, discovery screeners, and price history for new names. Slow on free data — minutes, not seconds.",
+    "lastScan": "Last scan: {{status}} · {{stats}}",
+    "rerun": "Re-run universe scan",
+    "scanning": "Scanning…",
+    "error": "Scan failed — check API logs"
+  }
+}

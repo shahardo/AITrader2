@@ -1,0 +1,19 @@
+{
+  "title": "ציונים",
+  "analyzePlaceholder": "סימולים לניתוח (מחדש), לדוגמה AAPL, TEVA.TA",
+  "runAnalysis": "הרץ ניתוח",
+  "analyzing": "מנתח…",
+  "analysisError": "הרצת הניתוח נכשלה",
+  "loading": "טוען ציונים…",
+  "empty": "אין עדיין ציונים — הריצו ניתוח למעלה או המתינו לפעימה הלילית.",
+  "table": {
+    "rank": "#",
+    "symbol": "סימול",
+    "name": "שם",
+    "combined": "ציון משולב",
+    "technical": "טכני",
+    "sentiment": "סנטימנט",
+    "asOf": "נכון לתאריך",
+    "sentimentNotAvailable": "אין מידע"
+  }
+}

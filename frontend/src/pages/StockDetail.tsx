@@ -4,32 +4,18 @@
 
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ApiError, getAnalysis, getInstrument, getSentiment } from '../api/client'
 import CandleChart from '../components/CandleChart'
 
-const INDICATOR_LABELS: Record<string, string> = {
-  sma_cross: 'SMA 50/200 cross',
-  ema20: 'EMA 20',
-  macd: 'MACD',
-  rsi: 'RSI (14)',
-  stochastic: 'Stochastic %K',
-  bollinger: 'Bollinger %B',
-  atr: 'ATR (volatility)',
-  obv: 'OBV flow',
-  vwap_distance: 'VWAP distance',
-  adx: 'ADX',
-  williams_r: 'Williams %R',
-  cci: 'CCI',
-  trend_channel: 'Trend channel',
-  support_resistance: 'Support/Resistance',
-}
-
 /** Badge colors per signal direction. */
-function signalBadge(signal: -1 | 0 | 1) {
-  if (signal === 1) return <span className="rounded bg-emerald-900 px-2 py-0.5 text-emerald-300">BUY</span>
-  if (signal === -1) return <span className="rounded bg-red-900 px-2 py-0.5 text-red-300">SELL</span>
-  return <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-400">—</span>
+function signalBadge(signal: -1 | 0 | 1, t: (key: string) => string) {
+  if (signal === 1)
+    return <span className="rounded bg-positive-soft px-2 py-0.5 text-positive-soft-text">{t('signals.buy')}</span>
+  if (signal === -1)
+    return <span className="rounded bg-negative-soft px-2 py-0.5 text-negative-soft-text">{t('signals.sell')}</span>
+  return <span className="rounded bg-panel-2 px-2 py-0.5 text-ink-3">{t('signals.neutral')}</span>
 }
 
 /** Derive a Clearbit logo URL from a company website, or null if unavailable. */
@@ -47,6 +33,7 @@ const DESCRIPTION_TRUNCATE_LENGTH = 280
 
 /** Stock detail page for /stocks/:symbol. */
 export default function StockDetailPage() {
+  const { t } = useTranslation(['stockDetail', 'common'])
   const { symbol = '' } = useParams()
   const [descExpanded, setDescExpanded] = useState(false)
   const [logoFailed, setLogoFailed] = useState(false)
@@ -65,13 +52,13 @@ export default function StockDetailPage() {
     retry: false,
   })
 
-  if (detail.isLoading) return <p className="p-6 text-slate-400">Loading…</p>
+  if (detail.isLoading) return <p className="p-6 text-ink-3">{t('common:actions.loading')}</p>
   if (detail.error || !detail.data)
     return (
-      <p role="alert" className="p-6 text-red-400">
+      <p role="alert" className="p-6 text-negative">
         {detail.error instanceof ApiError && detail.error.status === 404
-          ? 'Instrument not found'
-          : 'Failed to load instrument'}
+          ? t('errors.notFound')
+          : t('errors.loadFailed')}
       </p>
     )
 
@@ -84,26 +71,30 @@ export default function StockDetailPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex items-baseline gap-4">
         <h1 className="text-2xl font-bold">
-          <span className="font-mono text-emerald-300">{inst.symbol}</span> {inst.name}
+          <span className="font-mono text-accent-link">{inst.symbol}</span> {inst.name}
         </h1>
-        <span className="text-slate-400">
+        <span className="text-ink-3">
           {inst.last_close != null ? inst.last_close.toFixed(2) : '—'} {inst.currency}
         </span>
         {snap && (
-          <span className="ml-auto rounded bg-slate-800 px-3 py-1 text-sm">
-            Technical score <strong className="text-emerald-300">{snap.technical_score}</strong>
-            /100
+          <span className="ms-auto rounded bg-panel-2 px-3 py-1 text-sm">
+            <Trans
+              t={t}
+              i18nKey="header.technicalScore"
+              values={{ score: snap.technical_score }}
+              components={{ strong: <strong className="text-accent-link" /> }}
+            />
           </span>
         )}
       </header>
 
       {(inst.website || inst.description) && (
-        <section className="rounded border border-slate-800 bg-slate-900 p-3">
+        <section className="rounded border border-edge bg-panel p-3">
           <div className="flex items-start gap-3">
             {inst.website && logoUrl(inst.website) && !logoFailed && (
               <img
                 src={logoUrl(inst.website)!}
-                alt={`${inst.name} logo`}
+                alt={t('company.logoAlt', { name: inst.name })}
                 className="h-10 w-10 rounded bg-white object-contain p-1"
                 onError={() => setLogoFailed(true)}
               />
@@ -114,13 +105,13 @@ export default function StockDetailPage() {
                   href={inst.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sm text-emerald-300 hover:underline"
+                  className="text-sm text-accent-link hover:underline"
                 >
                   {inst.website.replace(/^https?:\/\//, '')}
                 </a>
               )}
               {inst.description && (
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-ink-3">
                   {descExpanded || inst.description.length <= DESCRIPTION_TRUNCATE_LENGTH
                     ? inst.description
                     : `${inst.description.slice(0, DESCRIPTION_TRUNCATE_LENGTH)}…`}
@@ -128,9 +119,9 @@ export default function StockDetailPage() {
                     <button
                       type="button"
                       onClick={() => setDescExpanded((v) => !v)}
-                      className="ml-1 text-emerald-300 hover:underline"
+                      className="ms-1 text-accent-link hover:underline"
                     >
-                      {descExpanded ? 'Show less' : 'Show more'}
+                      {descExpanded ? t('company.showLess') : t('company.showMore')}
                     </button>
                   )}
                 </p>
@@ -147,30 +138,25 @@ export default function StockDetailPage() {
       />
 
       <section>
-        <h2 className="mb-2 text-lg font-semibold">Indicators</h2>
-        {noAnalysisYet && (
-          <p className="text-slate-400">
-            No analysis yet — trigger a run from the Scores page or wait for the nightly
-            pipeline.
-          </p>
-        )}
+        <h2 className="mb-2 text-lg font-semibold">{t('indicators.title')}</h2>
+        {noAnalysisYet && <p className="text-ink-3">{t('indicators.noAnalysis')}</p>}
         {snap && (
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-start text-sm">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <th className="py-1">Indicator</th>
-                <th>Signal</th>
-                <th className="text-right">Strength</th>
-                <th className="text-right">Value</th>
+              <tr className="border-b border-edge-2 text-ink-3">
+                <th className="py-1">{t('indicators.table.indicator')}</th>
+                <th>{t('indicators.table.signal')}</th>
+                <th className="text-end">{t('indicators.table.strength')}</th>
+                <th className="text-end">{t('indicators.table.value')}</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(snap.signals).map(([key, sig]) => (
-                <tr key={key} className="border-b border-slate-800">
-                  <td className="py-1.5">{INDICATOR_LABELS[key] ?? key}</td>
-                  <td>{signalBadge(sig.signal)}</td>
-                  <td className="text-right">{(sig.strength * 100).toFixed(0)}%</td>
-                  <td className="text-right text-slate-400">
+                <tr key={key} className="border-b border-edge">
+                  <td className="py-1.5">{t(`indicators.${key}`, { defaultValue: key })}</td>
+                  <td>{signalBadge(sig.signal, t)}</td>
+                  <td className="text-end">{(sig.strength * 100).toFixed(0)}%</td>
+                  <td className="text-end text-ink-3">
                     {sig.value != null ? sig.value.toFixed(2) : '—'}
                   </td>
                 </tr>
@@ -181,25 +167,32 @@ export default function StockDetailPage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-lg font-semibold">Sentiment</h2>
+        <h2 className="mb-2 text-lg font-semibold">{t('sentiment.title')}</h2>
         {sentiment.data ? (
           <>
-            <p className="mb-2 text-sm text-slate-300">
-              Composite <strong>{sentiment.data.score.toFixed(2)}</strong> (−1…+1) from{' '}
-              {sentiment.data.item_count} items · confidence{' '}
-              {(sentiment.data.confidence * 100).toFixed(0)}%
+            <p className="mb-2 text-sm text-ink-2">
+              <Trans
+                t={t}
+                i18nKey="sentiment.composite"
+                values={{
+                  score: sentiment.data.score.toFixed(2),
+                  count: sentiment.data.item_count,
+                  pct: (sentiment.data.confidence * 100).toFixed(0),
+                }}
+                components={{ strong: <strong /> }}
+              />
             </p>
             <ul className="space-y-2">
               {sentiment.data.items.map((item, i) => (
-                <li key={i} className="rounded border border-slate-800 bg-slate-900 p-3 text-sm">
+                <li key={i} className="rounded border border-edge bg-panel p-3 text-sm">
                   <div className="flex items-center gap-2">
                     <span
                       className={
                         item.sentiment > 0.15
-                          ? 'text-emerald-400'
+                          ? 'text-positive'
                           : item.sentiment < -0.15
-                            ? 'text-red-400'
-                            : 'text-slate-400'
+                            ? 'text-negative'
+                            : 'text-ink-3'
                       }
                     >
                       {item.sentiment > 0 ? '+' : ''}
@@ -213,18 +206,18 @@ export default function StockDetailPage() {
                     >
                       {item.title}
                     </a>
-                    <span className="ml-auto text-xs text-slate-500">{item.source}</span>
+                    <span className="ms-auto text-xs text-ink-4">{item.source}</span>
                   </div>
-                  {item.summary && <p className="mt-1 text-xs text-slate-400">{item.summary}</p>}
+                  {item.summary && <p className="mt-1 text-xs text-ink-3">{item.summary}</p>}
                 </li>
               ))}
             </ul>
           </>
         ) : (
-          <p className="text-slate-400">No sentiment data yet for this instrument.</p>
+          <p className="text-ink-3">{t('sentiment.empty')}</p>
         )}
       </section>
-      <p className="text-xs text-slate-600">Not financial advice.</p>
+      <p className="text-xs text-ink-5">{t('common:disclaimerShort')}</p>
     </div>
   )
 }

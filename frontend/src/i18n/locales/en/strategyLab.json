@@ -1,0 +1,37 @@
+{
+  "title": "Strategy Lab",
+  "description": "Each strategy is fitted on the first 10 months of the trailing year and validated on the last 2 months. Only out-of-sample (test) results drive strategy selection.",
+  "actions": {
+    "reevaluate": "Re-evaluate strategies",
+    "evaluating": "Evaluating (10mo train / 2mo test)…"
+  },
+  "errors": {
+    "evaluationFailed": "Evaluation failed — load price history first (Universe page / data loader)"
+  },
+  "loading": "Loading…",
+  "metrics": {
+    "train": "Train (in-sample)",
+    "test": "Test (out-of-sample — drives selection)",
+    "summary": "Sharpe <strong>{{sharpe}}</strong> · CAGR {{cagr}} · MaxDD {{maxDrawdown}} · win {{winRate}} · {{count}} trades"
+  },
+  "card": {
+    "suits": "suits {{riskFit}}",
+    "latestTestSharpe": "latest test Sharpe",
+    "notEvaluated": "Not evaluated yet.",
+    "run": "Run {{date}} — test Sharpe {{value}}"
+  },
+  "detail": {
+    "summary": "Train {{trainStart}} → {{trainEnd}} · Test (out-of-sample) {{testStart}} → {{testEnd}} · params {{params}}",
+    "tradesHeading": "Trades ({{count}})",
+    "noTrades": "No trades in the test window.",
+    "table": {
+      "date": "Date",
+      "side": "Side",
+      "symbol": "Symbol",
+      "qty": "Qty",
+      "price": "Price",
+      "pnl": "P&L",
+      "triggeringSignals": "Triggering signals"
+    }
+  }
+}

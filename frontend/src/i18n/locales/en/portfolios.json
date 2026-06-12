@@ -1,0 +1,38 @@
+{
+  "title": "Portfolios",
+  "hitRate": "Call accuracy (30d): {{pct}}% of {{n}} · avg {{sign}}{{avg}}%",
+  "loading": "Loading…",
+  "empty": "No portfolios yet — create your first one above.",
+  "createForm": {
+    "name": "Name",
+    "capital": "Virtual capital",
+    "strategy": "Strategy",
+    "pickLater": "— pick later —",
+    "autoExecute": "Auto-execute trades",
+    "submit": "Create portfolio",
+    "error": "Failed to create portfolio"
+  },
+  "proposal": {
+    "propose": "Propose initial portfolio",
+    "building": "Building proposal…",
+    "error": "No universe scores yet — run an analysis on the Scores page first",
+    "proposedPositions": "Proposed starting positions:",
+    "priceConfidence": "@ {{price}} · confidence {{confidence}}%",
+    "approve": "Approve & open positions"
+  },
+  "card": {
+    "delete": "delete",
+    "deleteAriaLabel": "Delete {{name}}",
+    "strategyLine": "Strategy: {{name}} · cash {{cash}} · {{mode}}",
+    "strategyNone": "none",
+    "modeAuto": "auto-trade",
+    "modeManual": "manual approval",
+    "holdings": "Holdings",
+    "hideHoldings": "Hide holdings",
+    "recommendations": "Recommendations",
+    "noPositions": "No positions yet."
+  },
+  "comparison": {
+    "title": "Performance comparison (normalized to 100)"
+  }
+}

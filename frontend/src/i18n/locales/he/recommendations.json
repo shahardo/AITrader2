@@ -1,0 +1,17 @@
+{
+  "title": "המלצות",
+  "portfolioAriaLabel": "תיק",
+  "generate": "הפק כעת",
+  "generating": "מנתח…",
+  "generateError": "ההפקה נכשלה — האם לתיק הזה משויכת אסטרטגיה?",
+  "noPortfolios": "צרו תיק תחילה.",
+  "pending": "ממתינות ({{count}})",
+  "pendingEmpty": "אין דבר שמחכה לאישור.",
+  "history": "היסטוריה",
+  "historyEmpty": "אין עדיין היסטוריה.",
+  "card": {
+    "priceConfidence": "@ {{price}} · רמת ביטחון {{confidence}}%",
+    "approve": "אישור וביצוע",
+    "reject": "דחייה"
+  }
+}

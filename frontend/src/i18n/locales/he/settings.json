@@ -1,0 +1,41 @@
+{
+  "title": "הגדרות",
+  "loading": "טוען…",
+  "profile": {
+    "heading": "פרופיל",
+    "riskLevel": "רמת סיכון",
+    "riskOptions": {
+      "conservative": "שמרני",
+      "balanced": "מאוזן",
+      "aggressive": "אגרסיבי"
+    },
+    "markets": "שווקים",
+    "marketsOptions": {
+      "us": "ארה״ב בלבד",
+      "tase": "בורסת תל אביב בלבד",
+      "both": "ארה״ב + תל אביב"
+    },
+    "strategySwitchMode": "החלפות אסטרטגיה שבועיות",
+    "strategySwitchOptions": {
+      "approve": "בקש את אישורי",
+      "auto": "החל אוטומטית"
+    }
+  },
+  "telegram": {
+    "heading": "התראות טלגרם",
+    "linked": "מקושר ✓ — תקציר יומי מופעל.",
+    "instructions": "פתחו את הבוט בטלגרם ושלחו:",
+    "command": "/start {{code}}",
+    "checkLink": "שלחתי — בדקו קישור",
+    "notSeenYet": "עדיין לא התקבל — נסו שוב בעוד מספר שניות.",
+    "linkTelegram": "קישור טלגרם"
+  },
+  "scan": {
+    "heading": "סריקת יקום",
+    "description": "מריץ סריקה מלאה: מרכיבי המדדים, מסנני גילוי, והיסטוריית מחירים לשמות חדשים. איטי בנתונים חינמיים — דקות, לא שניות.",
+    "lastScan": "סריקה אחרונה: {{status}} · {{stats}}",
+    "rerun": "הרץ סריקת יקום מחדש",
+    "scanning": "סורק…",
+    "error": "הסריקה נכשלה — בדקו את לוגי ה-API"
+  }
+}

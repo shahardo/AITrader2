@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   ApiError,
   approveInitialProposal,
@@ -21,21 +22,13 @@ import {
   type RecommendationOut,
 } from '../api/client'
 
-const STEP_TITLES = [
-  'Your profile',
-  'Load the universe',
-  'Run the first analysis',
-  'Create a portfolio',
-  'First recommendations',
-  'All set',
-]
-
 /** Render an error from a mutation as a red alert line. */
 function ErrorLine({ error }: { error: unknown }) {
+  const { t } = useTranslation('onboarding')
   if (!error) return null
-  const message = error instanceof ApiError ? error.message : 'Something went wrong'
+  const message = error instanceof ApiError ? error.message : t('errors.somethingWrong')
   return (
-    <p role="alert" className="text-sm text-red-400">
+    <p role="alert" className="text-sm text-negative">
       {message}
     </p>
   )
@@ -53,6 +46,7 @@ function firstIncompleteStep(status: OnboardingStatus | undefined): number {
 /** First-login setup wizard page. */
 export default function OnboardingPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation('onboarding')
   const queryClient = useQueryClient()
   const [stepOverride, setStep] = useState<number | null>(null)
   const [portfolioId, setPortfolioId] = useState<number | null>(null)
@@ -128,22 +122,22 @@ export default function OnboardingPage() {
     navigate('/universe')
   }
 
+  const stepTitles = t('steps', { returnObjects: true }) as string[]
+
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-1 text-2xl font-bold">Welcome to AITrader2</h1>
-      <p className="text-sm text-slate-400">
-        A few steps to get your paper-trading research workspace ready. Not financial advice.
-      </p>
-      <p className="mb-6 mt-1 text-xs text-slate-500">
-        {me ? `Signed in as ${me.email}` : ' '}
+      <h1 className="mb-1 text-2xl font-bold">{t('welcome.heading')}</h1>
+      <p className="text-sm text-ink-3">{t('welcome.subtitle')}</p>
+      <p className="mb-6 mt-1 text-xs text-ink-4">
+        {me ? t('welcome.signedInAs', { email: me.email }) : ' '}
       </p>
 
       <ol className="mb-6 space-y-1 text-sm">
-        {STEP_TITLES.map((title, i) => (
+        {stepTitles.map((title, i) => (
           <li
             key={title}
             className={
-              i === step ? 'font-semibold text-emerald-400' : i < step ? 'text-slate-500 line-through' : 'text-slate-400'
+              i === step ? 'font-semibold text-accent' : i < step ? 'text-ink-4 line-through' : 'text-ink-3'
             }
           >
             {i + 1}. {title}
@@ -151,76 +145,71 @@ export default function OnboardingPage() {
         ))}
       </ol>
 
-      <div className="space-y-4 rounded-lg border border-slate-800 bg-slate-900 p-6">
+      <div className="space-y-4 rounded-lg border border-edge bg-panel p-6">
         {step === 0 && (
           <>
-            <h2 className="text-lg font-semibold">Your profile</h2>
-            <p className="text-sm text-slate-400">
-              Risk level and markets shape which strategies and stocks you are offered.
-            </p>
+            <h2 className="text-lg font-semibold">{t('profile.heading')}</h2>
+            <p className="text-sm text-ink-3">{t('profile.description')}</p>
             <label className="block text-sm">
-              Risk level
+              {t('profile.riskLevel')}
               <select
                 value={riskLevel}
                 onChange={(e) => setRiskChoice(e.target.value)}
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                className="mt-1 w-full rounded border border-edge-2 bg-panel-2 px-2 py-1"
               >
-                <option value="conservative">Conservative</option>
-                <option value="balanced">Balanced</option>
-                <option value="aggressive">Aggressive</option>
+                <option value="conservative">{t('profile.riskOptions.conservative')}</option>
+                <option value="balanced">{t('profile.riskOptions.balanced')}</option>
+                <option value="aggressive">{t('profile.riskOptions.aggressive')}</option>
               </select>
             </label>
             <label className="block text-sm">
-              Markets
+              {t('profile.markets')}
               <select
                 value={markets}
                 onChange={(e) => setMarketsChoice(e.target.value)}
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                className="mt-1 w-full rounded border border-edge-2 bg-panel-2 px-2 py-1"
               >
-                <option value="us">US only</option>
-                <option value="tase">Israel (TASE) only</option>
-                <option value="both">US + TASE</option>
+                <option value="us">{t('profile.marketOptions.us')}</option>
+                <option value="tase">{t('profile.marketOptions.tase')}</option>
+                <option value="both">{t('profile.marketOptions.both')}</option>
               </select>
             </label>
             <ErrorLine error={saveProfile.error} />
             <button
               onClick={() => saveProfile.mutate()}
               disabled={saveProfile.isPending}
-              className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
             >
-              Save & continue
+              {t('profile.saveAndContinue')}
             </button>
           </>
         )}
 
         {step === 1 && (
           <>
-            <h2 className="text-lg font-semibold">Load the universe</h2>
+            <h2 className="text-lg font-semibold">{t('universe.heading')}</h2>
             {status?.universe_loaded ? (
               <>
-                <p className="text-sm text-slate-300">
-                  Universe already loaded — {status.instrument_count} instruments tracked.
+                <p className="text-sm text-ink-2">
+                  {t('universe.alreadyLoaded', { count: status.instrument_count })}
                 </p>
                 <button
                   onClick={() => setStep(2)}
-                  className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500"
+                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover"
                 >
-                  Continue
+                  {t('universe.continue')}
                 </button>
               </>
             ) : (
               <>
-                <p className="text-sm text-slate-400">
-                  Downloads S&P 500, Nasdaq-100 and TA-125 constituents plus their price
-                  history. This can take several minutes — leave the tab open.
-                </p>
+                <p className="text-sm text-ink-3">{t('universe.description')}</p>
                 <ErrorLine error={loadUniverse.error} />
                 <button
                   onClick={() => loadUniverse.mutate()}
                   disabled={loadUniverse.isPending}
-                  className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                 >
-                  {loadUniverse.isPending ? 'Loading universe…' : 'Load universe now'}
+                  {loadUniverse.isPending ? t('universe.loading') : t('universe.loadNow')}
                 </button>
               </>
             )}
@@ -229,33 +218,27 @@ export default function OnboardingPage() {
 
         {step === 2 && (
           <>
-            <h2 className="text-lg font-semibold">Run the first analysis</h2>
+            <h2 className="text-lg font-semibold">{t('analysis.heading')}</h2>
             {status?.scores_ready ? (
               <>
-                <p className="text-sm text-slate-300">
-                  Scores already computed — the leaderboard is ready.
-                </p>
+                <p className="text-sm text-ink-2">{t('analysis.alreadyComputed')}</p>
                 <button
                   onClick={() => setStep(3)}
-                  className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500"
+                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover"
                 >
-                  Continue
+                  {t('analysis.continue')}
                 </button>
               </>
             ) : (
               <>
-                <p className="text-sm text-slate-400">
-                  Scores a first batch of stocks (technical indicators + news sentiment) so
-                  recommendations have something to rank. The nightly pipeline covers the
-                  rest of the universe.
-                </p>
+                <p className="text-sm text-ink-3">{t('analysis.description')}</p>
                 <ErrorLine error={firstAnalysis.error} />
                 <button
                   onClick={() => firstAnalysis.mutate()}
                   disabled={firstAnalysis.isPending}
-                  className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                 >
-                  {firstAnalysis.isPending ? 'Analyzing…' : 'Run first analysis'}
+                  {firstAnalysis.isPending ? t('analysis.analyzing') : t('analysis.runFirst')}
                 </button>
               </>
             )}
@@ -264,10 +247,10 @@ export default function OnboardingPage() {
 
         {step === 3 && (
           <>
-            <h2 className="text-lg font-semibold">Create a portfolio</h2>
+            <h2 className="text-lg font-semibold">{t('portfolio.heading')}</h2>
             {portfolios && portfolios.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm text-slate-300">Pick an existing portfolio:</p>
+                <p className="text-sm text-ink-2">{t('portfolio.pickExisting')}</p>
                 {portfolios.map((p) => (
                   <button
                     key={p.id}
@@ -275,59 +258,58 @@ export default function OnboardingPage() {
                       setPortfolioId(p.id)
                       setStep(4)
                     }}
-                    className="block w-full rounded border border-slate-700 bg-slate-800 px-3 py-2 text-left text-sm hover:border-emerald-500"
+                    className="block w-full rounded border border-edge-2 bg-panel-2 px-3 py-2 text-start text-sm hover:border-accent"
                   >
                     {p.name} — ${p.value.toLocaleString()}
                   </button>
                 ))}
-                <p className="text-sm text-slate-400">…or create a new one:</p>
+                <p className="text-sm text-ink-3">{t('portfolio.orCreateNew')}</p>
               </div>
             )}
             <label className="block text-sm">
-              Name
+              {t('portfolio.name')}
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                className="mt-1 w-full rounded border border-edge-2 bg-panel-2 px-2 py-1"
               />
             </label>
             <label className="block text-sm">
-              Starting capital ($)
+              {t('portfolio.startingCapital')}
               <input
                 type="number"
                 min={1000}
                 value={capital}
                 onChange={(e) => setCapital(Number(e.target.value))}
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-800 px-2 py-1"
+                className="mt-1 w-full rounded border border-edge-2 bg-panel-2 px-2 py-1"
               />
             </label>
             <ErrorLine error={makePortfolio.error} />
             <button
               onClick={() => makePortfolio.mutate()}
               disabled={makePortfolio.isPending || !name.trim()}
-              className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
             >
-              Create portfolio
+              {t('portfolio.create')}
             </button>
           </>
         )}
 
         {step === 4 && (
           <>
-            <h2 className="text-lg font-semibold">First recommendations</h2>
+            <h2 className="text-lg font-semibold">{t('recommendations.heading')}</h2>
             {!proposal && (
               <>
-                <p className="text-sm text-slate-400">
-                  Generate an initial portfolio proposal: BUY recommendations sized to your
-                  capital, drawn from today's top-ranked stocks.
-                </p>
+                <p className="text-sm text-ink-3">{t('recommendations.description')}</p>
                 <ErrorLine error={generateProposal.error} />
                 <button
                   onClick={() => generateProposal.mutate()}
                   disabled={generateProposal.isPending || portfolioId == null}
-                  className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                 >
-                  {generateProposal.isPending ? 'Generating…' : 'Generate recommendations'}
+                  {generateProposal.isPending
+                    ? t('recommendations.generating')
+                    : t('recommendations.generate')}
                 </button>
               </>
             )}
@@ -335,15 +317,15 @@ export default function OnboardingPage() {
               <>
                 <ul className="space-y-2 text-sm">
                   {proposal.map((rec) => (
-                    <li key={rec.id} className="rounded border border-slate-800 bg-slate-950 p-2">
-                      <span className="font-mono font-semibold text-emerald-300">
+                    <li key={rec.id} className="rounded border border-edge bg-app p-2">
+                      <span className="font-mono font-semibold text-positive">
                         {rec.action} {rec.qty} {rec.symbol}
                       </span>{' '}
-                      <span className="text-slate-400">
-                        ({Math.round(rec.confidence * 100)}% confidence)
+                      <span className="text-ink-3">
+                        {t('recommendations.confidence', { percent: Math.round(rec.confidence * 100) })}
                       </span>
                       {rec.explanation && (
-                        <p className="mt-1 text-xs text-slate-400">{rec.explanation}</p>
+                        <p className="mt-1 text-xs text-ink-3">{rec.explanation}</p>
                       )}
                     </li>
                   ))}
@@ -353,15 +335,15 @@ export default function OnboardingPage() {
                   <button
                     onClick={() => approveProposal.mutate()}
                     disabled={approveProposal.isPending}
-                    className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                    className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                   >
-                    Approve all & execute
+                    {t('recommendations.approveAndExecute')}
                   </button>
                   <button
                     onClick={() => setStep(5)}
-                    className="rounded bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700"
+                    className="rounded bg-panel-2 px-4 py-2 text-sm hover:bg-panel-3"
                   >
-                    Decide later
+                    {t('recommendations.decideLater')}
                   </button>
                 </div>
               </>
@@ -371,28 +353,24 @@ export default function OnboardingPage() {
 
         {step === 5 && (
           <>
-            <h2 className="text-lg font-semibold">All set 🎉</h2>
-            <p className="text-sm text-slate-400">
-              Your workspace is ready. The nightly pipeline keeps prices, scores and
-              recommendations fresh; visit the Strategy Lab to compare strategies, or
-              Settings to link Telegram notifications.
-            </p>
+            <h2 className="text-lg font-semibold">{t('done.heading')}</h2>
+            <p className="text-sm text-ink-3">{t('done.description')}</p>
             <button
               onClick={() => {
                 if (me) dismissOnboarding(me.email)
                 navigate('/')
               }}
-              className="rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500"
+              className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover"
             >
-              Go to dashboard
+              {t('done.goToDashboard')}
             </button>
           </>
         )}
       </div>
 
       {step < 5 && (
-        <button onClick={skip} className="mt-4 text-sm text-slate-500 hover:text-slate-300">
-          Skip setup — I'll explore on my own
+        <button onClick={skip} className="mt-4 text-sm text-ink-4 hover:text-ink-2">
+          {t('skip')}
         </button>
       )}
     </div>

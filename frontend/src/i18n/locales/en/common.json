@@ -1,0 +1,27 @@
+{
+  "appName": "AITrader2",
+  "disclaimer": "Not financial advice — paper trading only",
+  "disclaimerShort": "Not financial advice.",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "loading": "Loading…",
+    "logout": "Log out",
+    "retry": "Retry"
+  },
+  "theme": {
+    "switchToLight": "Light mode",
+    "switchToDark": "Dark mode"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "he": "עברית"
+  },
+  "notifications": {
+    "ariaLabel": "Notifications",
+    "empty": "No notifications yet.",
+    "title": "Notifications"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "loading": "טוען…",
+  "errors": {
+    "notFound": "המכשיר לא נמצא",
+    "loadFailed": "טעינת המכשיר נכשלה"
+  },
+  "header": {
+    "technicalScore": "ציון טכני <strong>{{score}}</strong>/100"
+  },
+  "company": {
+    "logoAlt": "לוגו {{name}}",
+    "showMore": "הצג עוד",
+    "showLess": "הצג פחות"
+  },
+  "indicators": {
+    "title": "אינדיקטורים",
+    "noAnalysis": "אין עדיין ניתוח — הריצו ניתוח בעמוד הציונים או המתינו להרצה הלילית.",
+    "table": {
+      "indicator": "אינדיקטור",
+      "signal": "סיגנל",
+      "strength": "חוזק",
+      "value": "ערך"
+    },
+    "sma_cross": "חציית ממוצע נע 50/200",
+    "ema20": "ממוצע נע אקספוננציאלי 20",
+    "macd": "MACD",
+    "rsi": "RSI (14)",
+    "stochastic": "סטוכסטי %K",
+    "bollinger": "Bollinger %B",
+    "atr": "ATR (תנודתיות)",
+    "obv": "תזרים OBV",
+    "vwap_distance": "מרחק מ-VWAP",
+    "adx": "ADX",
+    "williams_r": "Williams %R",
+    "cci": "CCI",
+    "trend_channel": "תעלת מגמה",
+    "support_resistance": "תמיכה/התנגדות"
+  },
+  "signals": {
+    "buy": "קנייה",
+    "sell": "מכירה",
+    "neutral": "—"
+  },
+  "sentiment": {
+    "title": "סנטימנט",
+    "composite": "מדד מצרפי <strong>{{score}}</strong> (−1…+1) מתוך {{count}} פריטים · רמת ביטחון {{pct}}%",
+    "empty": "אין עדיין נתוני סנטימנט למכשיר זה."
+  },
+  "chart": {
+    "channelTop": "חלק עליון של התעלה",
+    "channelMid": "מרכז התעלה",
+    "channelBottom": "חלק תחתון של התעלה",
+    "support": "תמיכה",
+    "resistance": "התנגדות"
+  }
+}

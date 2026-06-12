@@ -1,0 +1,18 @@
+{
+  "tagline": "ניתוח מניות מבוסס AI ומסחר נייר.",
+  "fields": {
+    "email": "אימייל",
+    "password": "סיסמה"
+  },
+  "errors": {
+    "somethingWrong": "אירעה תקלה"
+  },
+  "actions": {
+    "logIn": "התחברות",
+    "createAccount": "יצירת חשבון"
+  },
+  "toggle": {
+    "toSignup": "משתמש חדש? צור חשבון",
+    "toLogin": "יש לך חשבון? התחבר"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tagline": "AI stock analysis & paper trading.",
+  "fields": {
+    "email": "Email",
+    "password": "Password"
+  },
+  "errors": {
+    "somethingWrong": "Something went wrong"
+  },
+  "actions": {
+    "logIn": "Log in",
+    "createAccount": "Create account"
+  },
+  "toggle": {
+    "toSignup": "New here? Create an account",
+    "toLogin": "Have an account? Log in"
+  }
+}

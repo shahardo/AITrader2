@@ -1,0 +1,31 @@
+{
+  "title": "Topics",
+  "actions": {
+    "refreshRadar": "Refresh radar",
+    "scanning": "Scanning news…",
+    "deepDive": "Deep dive",
+    "diving": "Diving… (this can take a minute)"
+  },
+  "hotNow": {
+    "heading": "Hot now",
+    "empty": "No topics yet — refresh the radar after the sentiment pipeline has run.",
+    "pill": "{{name}} · {{buzz}}"
+  },
+  "deepDiveSection": {
+    "heading": "Deep dive",
+    "placeholder": "Any theme, e.g. nuclear fusion"
+  },
+  "errors": {
+    "deepDiveFailed": "Deep dive failed — it needs the LLM configured (GROQ_API_KEY)"
+  },
+  "reports": {
+    "heading": "Reports",
+    "empty": "No deep-dive reports yet.",
+    "table": {
+      "symbol": "Symbol",
+      "name": "Name",
+      "score": "Score",
+      "why": "Why"
+    }
+  }
+}

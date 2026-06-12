@@ -1,0 +1,27 @@
+{
+  "appName": "AITrader2",
+  "disclaimer": "אין בתוכן ייעוץ פיננסי — מסחר נייר בלבד",
+  "disclaimerShort": "אין בתוכן ייעוץ פיננסי.",
+  "actions": {
+    "save": "שמירה",
+    "cancel": "ביטול",
+    "close": "סגירה",
+    "loading": "טוען…",
+    "logout": "התנתקות",
+    "retry": "ניסיון חוזר"
+  },
+  "theme": {
+    "switchToLight": "מצב בהיר",
+    "switchToDark": "מצב כהה"
+  },
+  "language": {
+    "label": "שפה",
+    "en": "English",
+    "he": "עברית"
+  },
+  "notifications": {
+    "ariaLabel": "התראות",
+    "empty": "אין התראות עדיין.",
+    "title": "התראות"
+  }
+}

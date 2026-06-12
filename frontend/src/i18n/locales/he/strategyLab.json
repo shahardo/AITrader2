@@ -1,0 +1,37 @@
+{
+  "title": "מעבדת אסטרטגיות",
+  "description": "כל אסטרטגיה מותאמת על 10 החודשים הראשונים מהשנה האחרונה ומאומתת על 2 החודשים הנותרים. רק תוצאות מחוץ למדגם (מבחן) קובעות את בחירת האסטרטגיה.",
+  "actions": {
+    "reevaluate": "הערך אסטרטגיות מחדש",
+    "evaluating": "מעריך (10 חודשי אימון / 2 חודשי מבחן)…"
+  },
+  "errors": {
+    "evaluationFailed": "ההערכה נכשלה — טען היסטוריית מחירים תחילה (עמוד היקום / טעינת נתונים)"
+  },
+  "loading": "טוען…",
+  "metrics": {
+    "train": "אימון (בתוך המדגם)",
+    "test": "מבחן (מחוץ למדגם — קובע את הבחירה)",
+    "summary": "Sharpe <strong>{{sharpe}}</strong> · CAGR {{cagr}} · MaxDD {{maxDrawdown}} · ניצחונות {{winRate}} · {{count}} עסקאות"
+  },
+  "card": {
+    "suits": "מתאים ל{{riskFit}}",
+    "latestTestSharpe": "Sharpe מבחן אחרון",
+    "notEvaluated": "עדיין לא הוערך.",
+    "run": "הרצה {{date}} — Sharpe מבחן {{value}}"
+  },
+  "detail": {
+    "summary": "אימון {{trainStart}} → {{trainEnd}} · מבחן (מחוץ למדגם) {{testStart}} → {{testEnd}} · פרמטרים {{params}}",
+    "tradesHeading": "עסקאות ({{count}})",
+    "noTrades": "אין עסקאות בחלון המבחן.",
+    "table": {
+      "date": "תאריך",
+      "side": "כיוון",
+      "symbol": "סימול",
+      "qty": "כמות",
+      "price": "מחיר",
+      "pnl": "רווח/הפסד",
+      "triggeringSignals": "אינדיקטורים מפעילים"
+    }
+  }
+}

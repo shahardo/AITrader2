@@ -6,6 +6,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from '../App'
+import { ThemeProvider } from '../contexts/ThemeContext'
 import { storeTokens } from '../api/client'
 
 vi.mock('../components/LineCompareChart', () => ({
@@ -19,7 +20,9 @@ function renderApp(path: string) {
   return render(
     <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={[path]}>
-        <App />
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -38,15 +41,15 @@ describe('App sidebar', () => {
     renderApp('/recommendations')
     const active = screen.getByRole('link', { name: 'Recommendations' })
     const inactive = screen.getByRole('link', { name: 'Portfolios' })
-    expect(active.className).toContain('text-emerald-400')
-    expect(inactive.className).not.toContain('text-emerald-400')
+    expect(active.className).toContain('text-accent')
+    expect(inactive.className).not.toContain('text-accent')
   })
 
   it('marks Portfolios active only at the root path, not on other routes', () => {
     renderApp('/universe')
     const portfolios = screen.getByRole('link', { name: 'Portfolios' })
     const universe = screen.getByRole('link', { name: 'Universe' })
-    expect(portfolios.className).not.toContain('text-emerald-400')
-    expect(universe.className).toContain('text-emerald-400')
+    expect(portfolios.className).not.toContain('text-accent')
+    expect(universe.className).toContain('text-accent')
   })
 })

@@ -2,6 +2,7 @@
 // trend-channel band and support/resistance price-line overlays.
 
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   CandlestickSeries,
   ColorType,
@@ -10,6 +11,8 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts'
 import type { PriceBarOut, SRLevelOut, TrendChannelOut } from '../api/client'
+import { cssVar } from '../lib/cssVar'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface Props {
   bars: PriceBarOut[]
@@ -21,28 +24,30 @@ interface Props {
 /** Candlestick chart with channel and S/R overlays drawn as price lines. */
 export default function CandleChart({ bars, channel, srLevels = [], height = 360 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { scheme } = useTheme()
+  const { t } = useTranslation('stockDetail')
 
   useEffect(() => {
     if (!containerRef.current || bars.length === 0) return
     const chart = createChart(containerRef.current, {
       height,
       layout: {
-        background: { type: ColorType.Solid, color: '#0f172a' },
-        textColor: '#94a3b8',
+        background: { type: ColorType.Solid, color: cssVar('--c-panel', '#0f172a') },
+        textColor: cssVar('--c-ink-3', '#94a3b8'),
       },
       grid: {
-        vertLines: { color: '#1e293b' },
-        horzLines: { color: '#1e293b' },
+        vertLines: { color: cssVar('--c-edge', '#1e293b') },
+        horzLines: { color: cssVar('--c-edge', '#1e293b') },
       },
-      timeScale: { borderColor: '#334155' },
-      rightPriceScale: { borderColor: '#334155' },
+      timeScale: { borderColor: cssVar('--c-edge-2', '#334155') },
+      rightPriceScale: { borderColor: cssVar('--c-edge-2', '#334155') },
     })
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: '#10b981',
-      downColor: '#ef4444',
+      upColor: cssVar('--c-positive', '#34d399'),
+      downColor: cssVar('--c-negative', '#f87171'),
       borderVisible: false,
-      wickUpColor: '#10b981',
-      wickDownColor: '#ef4444',
+      wickUpColor: cssVar('--c-positive', '#34d399'),
+      wickDownColor: cssVar('--c-negative', '#f87171'),
     })
     series.setData(
       bars.map((b) => ({
@@ -56,15 +61,15 @@ export default function CandleChart({ bars, channel, srLevels = [], height = 360
 
     if (channel) {
       const bands: Array<[number, string]> = [
-        [channel.upper, 'channel top'],
-        [channel.mid, 'channel mid'],
-        [channel.lower, 'channel bottom'],
+        [channel.upper, t('chart.channelTop')],
+        [channel.mid, t('chart.channelMid')],
+        [channel.lower, t('chart.channelBottom')],
       ]
       for (const [price, title] of bands) {
         series.createPriceLine({
           price,
-          color: '#38bdf8',
-          lineStyle: title === 'channel mid' ? LineStyle.Dotted : LineStyle.Dashed,
+          color: cssVar('--c-chart-line', '#38bdf8'),
+          lineStyle: title === t('chart.channelMid') ? LineStyle.Dotted : LineStyle.Dashed,
           lineWidth: 1,
           title,
         })
@@ -73,10 +78,10 @@ export default function CandleChart({ bars, channel, srLevels = [], height = 360
     for (const level of srLevels) {
       series.createPriceLine({
         price: level.price,
-        color: level.kind === 'support' ? '#10b981' : '#f59e0b',
+        color: level.kind === 'support' ? cssVar('--c-positive', '#34d399') : cssVar('--c-warning', '#fbbf24'),
         lineStyle: LineStyle.SparseDotted,
         lineWidth: 1,
-        title: `${level.kind} (${level.touches})`,
+        title: `${level.kind === 'support' ? t('chart.support') : t('chart.resistance')} (${level.touches})`,
       })
     }
     chart.timeScale().fitContent()
@@ -89,7 +94,7 @@ export default function CandleChart({ bars, channel, srLevels = [], height = 360
       window.removeEventListener('resize', onResize)
       chart.remove()
     }
-  }, [bars, channel, srLevels, height])
+  }, [bars, channel, srLevels, height, scheme, t])
 
   return <div ref={containerRef} data-testid="candle-chart" />
 }

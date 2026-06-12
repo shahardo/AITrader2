@@ -1,0 +1,22 @@
+{
+  "title": "יקום",
+  "searchPlaceholder": "חיפוש לפי סימול או שם…",
+  "exchangeFilterAriaLabel": "סינון לפי בורסה",
+  "exchangeOptions": {
+    "all": "כל הבורסות",
+    "us": "ארה״ב",
+    "tase": "בורסת תל אביב"
+  },
+  "loading": "טוען יקום…",
+  "error": "טעינת המכשירים נכשלה",
+  "empty": "אין עדיין מכשירים — הריצו את טוען היקום (ראו README) כדי לאכלס אותו.",
+  "table": {
+    "symbol": "סימול",
+    "name": "שם",
+    "exchange": "בורסה",
+    "sector": "סקטור",
+    "lastClose": "מחיר סגירה אחרון",
+    "asOf": "נכון לתאריך",
+    "historyBars": "היסטוריה (נרות)"
+  }
+}

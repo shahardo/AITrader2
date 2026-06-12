@@ -1,0 +1,56 @@
+{
+  "loading": "Loading…",
+  "errors": {
+    "notFound": "Instrument not found",
+    "loadFailed": "Failed to load instrument"
+  },
+  "header": {
+    "technicalScore": "Technical score <strong>{{score}}</strong>/100"
+  },
+  "company": {
+    "logoAlt": "{{name}} logo",
+    "showMore": "Show more",
+    "showLess": "Show less"
+  },
+  "indicators": {
+    "title": "Indicators",
+    "noAnalysis": "No analysis yet — trigger a run from the Scores page or wait for the nightly pipeline.",
+    "table": {
+      "indicator": "Indicator",
+      "signal": "Signal",
+      "strength": "Strength",
+      "value": "Value"
+    },
+    "sma_cross": "SMA 50/200 cross",
+    "ema20": "EMA 20",
+    "macd": "MACD",
+    "rsi": "RSI (14)",
+    "stochastic": "Stochastic %K",
+    "bollinger": "Bollinger %B",
+    "atr": "ATR (volatility)",
+    "obv": "OBV flow",
+    "vwap_distance": "VWAP distance",
+    "adx": "ADX",
+    "williams_r": "Williams %R",
+    "cci": "CCI",
+    "trend_channel": "Trend channel",
+    "support_resistance": "Support/Resistance"
+  },
+  "signals": {
+    "buy": "BUY",
+    "sell": "SELL",
+    "neutral": "—"
+  },
+  "sentiment": {
+    "title": "Sentiment",
+    "composite": "Composite <strong>{{score}}</strong> (−1…+1) from {{count}} items · confidence {{pct}}%",
+    "empty": "No sentiment data yet for this instrument."
+  },
+  "chart": {
+    "channelTop": "channel top",
+    "channelMid": "channel mid",
+    "channelBottom": "channel bottom",
+    "support": "support",
+    "resistance": "resistance"
+  }
+}

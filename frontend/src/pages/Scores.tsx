@@ -3,11 +3,13 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getLatestScores, runAnalysis } from '../api/client'
 
 /** Leaderboard page at /scores. */
 export default function ScoresPage() {
+  const { t } = useTranslation(['scores', 'common'])
   const queryClient = useQueryClient()
   const [symbols, setSymbols] = useState('')
   const scores = useQuery({ queryKey: ['scores'], queryFn: getLatestScores })
@@ -26,73 +28,71 @@ export default function ScoresPage() {
 
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-4 text-2xl font-bold">Scores</h1>
+      <h1 className="mb-4 text-2xl font-bold">{t('title')}</h1>
 
       <div className="mb-4 flex gap-2">
         <input
-          placeholder="Symbols to (re)analyze, e.g. AAPL, TEVA.TA"
+          placeholder={t('analyzePlaceholder')}
           value={symbols}
           onChange={(e) => setSymbols(e.target.value)}
-          className="w-96 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm"
+          className="w-96 rounded border border-edge-2 bg-panel-2 px-3 py-1.5 text-sm"
         />
         <button
           onClick={() => run.mutate()}
           disabled={run.isPending || !symbols.trim()}
-          className="rounded bg-emerald-600 px-4 py-1.5 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+          className="rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
-          {run.isPending ? 'Analyzing…' : 'Run analysis'}
+          {run.isPending ? t('analyzing') : t('runAnalysis')}
         </button>
       </div>
       {run.error && (
-        <p role="alert" className="mb-3 text-sm text-red-400">
-          Analysis run failed
+        <p role="alert" className="mb-3 text-sm text-negative">
+          {t('analysisError')}
         </p>
       )}
 
-      {scores.isLoading && <p className="text-slate-400">Loading scores…</p>}
+      {scores.isLoading && <p className="text-ink-3">{t('loading')}</p>}
       {scores.data && scores.data.length === 0 && (
-        <p className="text-slate-400">
-          No scores yet — run an analysis above or wait for the nightly pipeline.
-        </p>
+        <p className="text-ink-3">{t('empty')}</p>
       )}
       {scores.data && scores.data.length > 0 && (
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-start text-sm">
           <thead>
-            <tr className="border-b border-slate-700 text-slate-400">
-              <th className="py-2">#</th>
-              <th>Symbol</th>
-              <th>Name</th>
-              <th className="text-right">Combined</th>
-              <th className="text-right">Technical</th>
-              <th className="text-right">Sentiment</th>
-              <th className="text-right">As of</th>
+            <tr className="border-b border-edge-2 text-ink-3">
+              <th className="py-2">{t('table.rank')}</th>
+              <th>{t('table.symbol')}</th>
+              <th>{t('table.name')}</th>
+              <th className="text-end">{t('table.combined')}</th>
+              <th className="text-end">{t('table.technical')}</th>
+              <th className="text-end">{t('table.sentiment')}</th>
+              <th className="text-end">{t('table.asOf')}</th>
             </tr>
           </thead>
           <tbody>
             {scores.data.map((row) => (
-              <tr key={row.symbol} className="border-b border-slate-800 hover:bg-slate-900">
-                <td className="py-2 text-slate-500">{row.rank ?? '—'}</td>
+              <tr key={row.symbol} className="border-b border-edge hover:bg-panel">
+                <td className="py-2 text-ink-4">{row.rank ?? '—'}</td>
                 <td>
                   <Link
                     to={`/stocks/${encodeURIComponent(row.symbol)}`}
-                    className="font-mono text-emerald-300 hover:underline"
+                    className="font-mono text-accent-link hover:underline"
                   >
                     {row.symbol}
                   </Link>
                 </td>
                 <td>{row.name}</td>
-                <td className="text-right font-semibold">{row.combined_score.toFixed(1)}</td>
-                <td className="text-right text-slate-400">{row.technical_score.toFixed(1)}</td>
-                <td className="text-right text-slate-400">
-                  {row.sentiment_score != null ? row.sentiment_score.toFixed(2) : 'n/a'}
+                <td className="text-end font-semibold">{row.combined_score.toFixed(1)}</td>
+                <td className="text-end text-ink-3">{row.technical_score.toFixed(1)}</td>
+                <td className="text-end text-ink-3">
+                  {row.sentiment_score != null ? row.sentiment_score.toFixed(2) : t('table.sentimentNotAvailable')}
                 </td>
-                <td className="text-right text-slate-500">{row.date}</td>
+                <td className="text-end text-ink-4">{row.date}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      <p className="mt-4 text-xs text-slate-600">Not financial advice.</p>
+      <p className="mt-4 text-xs text-ink-5">{t('common:disclaimerShort')}</p>
     </div>
   )
 }

@@ -73,6 +73,11 @@ Milestones 1-2 are implemented:
   profile setup → universe load → first analysis → portfolio creation → initial
   recommendations, skipping steps already done (`GET /onboarding/status`);
   login redirects there until setup is complete or the wizard is skipped
+- Light/dark mode toggle, persisted per browser
+- Per-section accent colors: each nav destination (Portfolios, Recommendations, Strategy Lab,
+  Universe, Scores, Topics, Settings, stock detail) gets its own accent hue across both themes
+- Hebrew translation with full RTL layout support, alongside English; switchable from the
+  sidebar and persisted per browser
 
 ## Operations runbook
 
@@ -191,7 +196,8 @@ npm test && npx eslint src && npx tsc -b
   `marketdata/` (provider interface + yfinance), `universe/` (constituents + loader),
   `jobs/` (Celery wiring)
 - `backend/scripts/` — `load_universe`, `validate_tase_coverage`
-- `frontend/src/` — React SPA: `api/` client, `pages/` (Login, Universe)
+- `frontend/src/` — React SPA: `api/` client, `pages/` (one per nav section), `contexts/`
+  (theme/locale), `i18n/locales/{en,he}/` (translations)
 - `docs/` — PRD and development plan
 
 ## Development principles

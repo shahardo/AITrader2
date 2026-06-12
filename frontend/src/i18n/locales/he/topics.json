@@ -1,0 +1,31 @@
+{
+  "title": "נושאים",
+  "actions": {
+    "refreshRadar": "רענן רדאר",
+    "scanning": "סורק חדשות…",
+    "deepDive": "צלילה מעמיקה",
+    "diving": "צולל… (זה יכול לקחת דקה)"
+  },
+  "hotNow": {
+    "heading": "חם כרגע",
+    "empty": "אין נושאים עדיין — רענן את הרדאר לאחר שצינור הסנטימנט רץ.",
+    "pill": "{{name}} · {{buzz}}"
+  },
+  "deepDiveSection": {
+    "heading": "צלילה מעמיקה",
+    "placeholder": "כל נושא, למשל היתוך גרעיני"
+  },
+  "errors": {
+    "deepDiveFailed": "הצלילה המעמיקה נכשלה — יש להגדיר LLM (GROQ_API_KEY)"
+  },
+  "reports": {
+    "heading": "דוחות",
+    "empty": "אין דוחות צלילה מעמיקה עדיין.",
+    "table": {
+      "symbol": "סימול",
+      "name": "שם",
+      "score": "ציון",
+      "why": "מדוע"
+    }
+  }
+}

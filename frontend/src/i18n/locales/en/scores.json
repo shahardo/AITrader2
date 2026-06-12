@@ -1,0 +1,19 @@
+{
+  "title": "Scores",
+  "analyzePlaceholder": "Symbols to (re)analyze, e.g. AAPL, TEVA.TA",
+  "runAnalysis": "Run analysis",
+  "analyzing": "Analyzing…",
+  "analysisError": "Analysis run failed",
+  "loading": "Loading scores…",
+  "empty": "No scores yet — run an analysis above or wait for the nightly pipeline.",
+  "table": {
+    "rank": "#",
+    "symbol": "Symbol",
+    "name": "Name",
+    "combined": "Combined",
+    "technical": "Technical",
+    "sentiment": "Sentiment",
+    "asOf": "As of",
+    "sentimentNotAvailable": "n/a"
+  }
+}

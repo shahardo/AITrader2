@@ -151,6 +151,35 @@ StockDetail, Login, Onboarding). Charts use `lightweight-charts` (`CandleChart` 
 trend channel + S/R overlays) and a custom `LineCompareChart` for normalized equity-curve
 comparisons.
 
+### Theming, i18n & RTL (`frontend/src/index.css`, `contexts/ThemeContext.tsx`, `i18n/`)
+
+`index.css` maps semantic Tailwind utilities (`bg-panel`, `text-ink-2`, `text-accent`,
+`border-edge`, `text-positive`/`text-negative`/`text-warning`, etc.) via the Tailwind v4
+`@theme` directive to `--c-*` CSS custom properties, which are redefined per `.dark`/`.light`
+class and per `[data-section]` attribute on `<html>` — so the same class names resolve to
+different colors for light/dark mode and for each nav section's accent hue (portfolios:
+emerald default, recommendations: blue, strategies: violet, universe: amber, scores: cyan,
+topics: rose, settings: orange, stock-detail: teal). `ThemeProvider`
+(`contexts/ThemeContext.tsx`, wraps `<App/>` inside `BrowserRouter` in `main.tsx`) holds
+`scheme: 'dark'|'light'` (persisted to `localStorage` as `aitrader-color-scheme`, default
+`dark`), applies the `.dark`/`.light` class to `<html>`, and sets `data-section` from the
+current route via `sectionForPath()`. `useTheme()` exposes `{ scheme, toggleScheme }` for the
+sidebar toggle and for chart components. Canvas-based `lightweight-charts` components
+(`CandleChart`, `LineCompareChart`) can't use Tailwind classes, so they read resolved colors
+at runtime via `lib/cssVar.ts#cssVar('--c-panel', fallback)` and re-create the chart when
+`scheme` changes.
+
+Translations live in `i18n/locales/{en,he}/*.json`, one namespace per page plus shared
+`common`/`nav` namespaces, loaded synchronously by `i18n/index.ts` (react-i18next +
+`i18next-browser-languagedetector`, persisted to `localStorage` as `aitrader-language`,
+`fallbackLng: 'en'`). Pages call `useTranslation('<namespace>')` (or an array to also reach
+`common:*` keys). `ThemeProvider` also keeps `<html lang>`/`<html dir>` in sync with
+`i18n.language` — Hebrew (`he`) sets `dir="rtl"`. RTL-aware components use Tailwind logical
+properties (`ms-*`/`me-*`/`ps-*`/`pe-*`/`text-start`/`text-end`/`border-s*`/`border-e*`/
+`start-*`/`end-*`) instead of physical ones (`ml-*`/`mr-*`/`pl-*`/`pr-*`/`text-left`/
+`text-right`/`left-*`/`right-*`) so layouts mirror automatically. API-returned data (symbols,
+strategy names/descriptions, LLM-written rationales) is never translated — only UI chrome.
+
 ### Onboarding (`app/api/onboarding.py`, `frontend/src/pages/Onboarding.tsx`)
 
 `GET /onboarding/status` reports first-login setup progress (universe/prices/scores are
