@@ -2,8 +2,9 @@
 // that redirects logged-out visitors to the login page.
 
 import type { ReactElement } from 'react'
+import { useEffect } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { clearTokens, getTokens } from './api/client'
+import { AUTH_EXPIRED_EVENT, clearTokens, getTokens } from './api/client'
 import NotificationBell from './components/NotificationBell'
 import LoginPage from './pages/Login'
 import OnboardingPage from './pages/Onboarding'
@@ -25,6 +26,16 @@ function RequireAuth({ children }: { children: ReactElement }) {
 function NavBar() {
   const navigate = useNavigate()
   const location = useLocation()
+
+  // When a request's refresh token has also expired, send the user back to login.
+  useEffect(() => {
+    function onAuthExpired() {
+      navigate('/login', { replace: true })
+    }
+    window.addEventListener(AUTH_EXPIRED_EVENT, onAuthExpired)
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onAuthExpired)
+  }, [navigate])
+
   if (location.pathname === '/login') return null
   return (
     <nav className="flex items-center gap-6 border-b border-slate-800 bg-slate-900 px-6 py-3">

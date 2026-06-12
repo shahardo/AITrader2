@@ -141,11 +141,44 @@ export class ApiError extends Error {
   }
 }
 
+/** Dispatched on `window` when the refresh token is also invalid/expired; the app shell
+ * listens for this to send the user back to the login page. */
+export const AUTH_EXPIRED_EVENT = 'aitrader2:auth-expired'
+
+let refreshPromise: Promise<TokenPair | null> | null = null
+
+/**
+ * Exchange the stored refresh token for a new token pair, persisting the result.
+ * Concurrent callers share one in-flight request.
+ */
+function refreshTokens(): Promise<TokenPair | null> {
+  const tokens = getTokens()
+  if (!tokens) return Promise.resolve(null)
+  if (!refreshPromise) {
+    refreshPromise = fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: tokens.refresh_token }),
+    })
+      .then((resp) => (resp.ok ? (resp.json() as Promise<TokenPair>) : null))
+      .then((newTokens) => {
+        if (newTokens) storeTokens(newTokens)
+        return newTokens
+      })
+      .catch(() => null)
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
 /**
  * Fetch wrapper: attaches the Bearer token, parses JSON, and throws ApiError
- * with the backend's detail message on non-2xx responses.
+ * with the backend's detail message on non-2xx responses. On a 401, transparently
+ * refreshes the access token and retries once before giving up.
  */
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const tokens = getTokens()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -154,6 +187,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (tokens) headers['Authorization'] = `Bearer ${tokens.access_token}`
   const resp = await fetch(`/api/v1${path}`, { ...options, headers })
   if (!resp.ok) {
+    if (resp.status === 401 && !isRetry && tokens && !path.startsWith('/auth/')) {
+      const refreshed = await refreshTokens()
+      if (refreshed) return request<T>(path, options, true)
+      clearTokens()
+      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+    }
     let detail = resp.statusText
     try {
       const body = await resp.json()
@@ -163,6 +202,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
     throw new ApiError(resp.status, detail)
   }
+  if (resp.status === 204) return undefined as T
   return (await resp.json()) as T
 }
 
@@ -327,12 +367,8 @@ export function getPortfolio(id: number): Promise<PortfolioDetail> {
 }
 
 /** Delete a portfolio. */
-export async function deletePortfolio(id: number): Promise<void> {
-  const tokens = getTokens()
-  await fetch(`/api/v1/portfolios/${id}`, {
-    method: 'DELETE',
-    headers: tokens ? { Authorization: `Bearer ${tokens.access_token}` } : {},
-  })
+export function deletePortfolio(id: number): Promise<void> {
+  return request<void>(`/portfolios/${id}`, { method: 'DELETE' })
 }
 
 /** Fetch equity curves for several portfolios (comparison chart). */
@@ -471,12 +507,8 @@ export function listNotifications(): Promise<NotificationOut[]> {
 }
 
 /** Mark a notification read. */
-export async function markNotificationRead(id: number): Promise<void> {
-  const tokens = getTokens()
-  await fetch(`/api/v1/notifications/${id}/read`, {
-    method: 'POST',
-    headers: tokens ? { Authorization: `Bearer ${tokens.access_token}` } : {},
-  })
+export function markNotificationRead(id: number): Promise<void> {
+  return request<void>(`/notifications/${id}/read`, { method: 'POST' })
 }
 
 /** Start Telegram linking; returns the one-time code + instructions. */
