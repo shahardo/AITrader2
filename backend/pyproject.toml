@@ -1,6 +1,10 @@
 # pyproject.toml — backend package definition, dependencies, and tool configuration
 # (ruff lint rules, pytest defaults) for the AITrader2 API service.
 
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "aitrader2-backend"
 version = "0.1.0"
@@ -21,6 +25,8 @@ dependencies = [
     "httpx>=0.28",
     "celery>=5.5",
     "redis>=5.2",
+    "groq>=0.11",
+    "feedparser>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +35,11 @@ dev = [
     "pytest>=8.3",
     "pytest-cov>=6.0",
 ]
+
+[tool.setuptools.packages.find]
+# Only the `app` package is installable; alembic/scripts/tests are used from the
+# source tree directly and would otherwise create a flat-layout discovery conflict.
+include = ["app*"]
 
 [tool.ruff]
 line-length = 100

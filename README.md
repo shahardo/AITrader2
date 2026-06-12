@@ -92,6 +92,11 @@ is not yet wired into the performance charts.
 
 ## Quick start (Docker)
 
+Requires Docker Desktop (Mac/Windows) or Docker Engine + the Compose plugin (Linux):
+
+- Install: https://docs.docker.com/get-docker/
+- Verify: `docker --version && docker compose version`
+
 ```bash
 cp .env.example .env       # set JWT_SECRET (and GROQ_API_KEY from M2 on)
 docker compose up --build
@@ -114,15 +119,53 @@ docker compose exec api python -m scripts.validate_tase_coverage
 
 ## Development without Docker
 
-Backend (Python 3.11+):
+Backend (Python 3.11+), using [uv](https://docs.astral.sh/uv/) for the virtualenv and
+package installs instead of `pip`:
+
+Requires a running PostgreSQL 16+ instance and a `.env` file **inside `backend/`**
+(`pydantic-settings` resolves `env_file=".env"` relative to the working directory, so the
+root `.env` used by Docker isn't picked up when running commands from `backend/` — copy it:
+`cp ../.env backend/.env`, or create one from `.env.example`).
+
+`DATABASE_URL` must point at a database that already exists:
+
+- If using a fresh Postgres install, create the `aitrader` role/database to match the
+  default (`postgresql+psycopg://aitrader:aitrader@localhost:5432/aitrader`).
+- If you already have a local Postgres instance, instead point `DATABASE_URL` at an
+  existing superuser and run `CREATE DATABASE aitrader;` under that user, e.g.
+  `postgresql+psycopg://postgres:<password>@localhost:5432/aitrader`.
 
 ```bash
+# Install uv (if not already): https://docs.astral.sh/uv/getting-started/installation/
+
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]" "pydantic[email]" lxml
-alembic upgrade head          # needs DATABASE_URL pointing at PostgreSQL
-uvicorn app.main:app --reload
-pytest && ruff check app scripts tests
+uv venv
+uv pip install -e ".[dev]" "pydantic[email]" lxml
+
+uv run alembic upgrade head    # needs DATABASE_URL pointing at PostgreSQL
+uv run uvicorn app.main:app --reload
+uv run pytest && uv run ruff check app scripts tests
+```
+
+`uv run` executes inside `.venv` without needing to activate it (works the same in
+PowerShell, cmd, and bash). To activate the venv directly instead: PowerShell
+`.venv\Scripts\Activate.ps1`, cmd `.venv\Scripts\activate.bat`, bash `source .venv/Scripts/activate`.
+
+Populate the universe and price history (run from `backend/`, with `.venv` active or via
+`uv run`; first run takes a while on free Yahoo data):
+
+```bash
+uv run python -m scripts.load_universe
+```
+
+Useful flags: `--skip-prices` (only upsert instruments, no history sync), `--history-days N`
+(default 730), `--limit N` (sync prices for only the first N instruments — handy for a quick
+smoke test).
+
+Validate TASE coverage on Yahoo (Milestone 1 go/no-go check):
+
+```bash
+uv run python -m scripts.validate_tase_coverage
 ```
 
 Frontend (Node 22):
