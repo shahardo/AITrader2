@@ -211,6 +211,186 @@ export function getSentiment(symbol: string): Promise<SentimentOut> {
   return request<SentimentOut>(`/instruments/${encodeURIComponent(symbol)}/sentiment`)
 }
 
+export interface PortfolioOut {
+  id: number
+  name: string
+  strategy_id: number | null
+  strategy_name: string | null
+  initial_capital: number
+  cash: number
+  auto_execute: boolean
+  value: number
+  pnl_pct: number
+  created_at: string
+}
+
+export interface HoldingOut {
+  symbol: string
+  name: string
+  qty: number
+  avg_cost: number
+  last_close: number | null
+  market_value: number | null
+  pnl_pct: number | null
+}
+
+export interface PortfolioDetail extends PortfolioOut {
+  holdings: HoldingOut[]
+}
+
+export interface PerformanceOut {
+  portfolio_id: number
+  name: string
+  curve: { date: string; value: number }[]
+}
+
+export interface RecommendationOut {
+  id: number
+  portfolio_id: number
+  symbol: string
+  instrument_name: string
+  action: 'BUY' | 'SELL' | 'HOLD'
+  qty: number
+  confidence: number
+  signals: Record<string, unknown>
+  explanation: string
+  kind: 'daily' | 'initial'
+  status: 'pending' | 'approved' | 'rejected' | 'executed' | 'expired'
+  price_at_recommendation: number | null
+  created_at: string
+}
+
+export interface StrategyOut {
+  id: number
+  name: string
+  kind: string
+  params: Record<string, unknown>
+  risk_fit: string
+  description: string
+}
+
+export interface StrategyRunOut {
+  id: number
+  strategy_id: number
+  run_date: string
+  train_start: string
+  train_end: string
+  test_start: string
+  test_end: string
+  chosen_params: Record<string, unknown>
+  train_metrics: Record<string, number>
+  test_metrics: Record<string, number>
+  equity_curve: [string, number][]
+  status: string
+}
+
+export interface BacktestTradeOut {
+  symbol: string
+  side: 'BUY' | 'SELL'
+  date: string
+  price: number
+  qty: number
+  triggering_signals: Record<string, unknown>
+  pnl: number | null
+}
+
+/** List the user's paper portfolios with live valuations. */
+export function listPortfolios(): Promise<PortfolioOut[]> {
+  return request<PortfolioOut[]>('/portfolios')
+}
+
+/** Create a paper portfolio. */
+export function createPortfolio(payload: {
+  name: string
+  initial_capital: number
+  strategy_id?: number | null
+  auto_execute?: boolean
+}): Promise<PortfolioOut> {
+  return request<PortfolioOut>('/portfolios', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+/** Fetch one portfolio with holdings. */
+export function getPortfolio(id: number): Promise<PortfolioDetail> {
+  return request<PortfolioDetail>(`/portfolios/${id}`)
+}
+
+/** Delete a portfolio. */
+export async function deletePortfolio(id: number): Promise<void> {
+  const tokens = getTokens()
+  await fetch(`/api/v1/portfolios/${id}`, {
+    method: 'DELETE',
+    headers: tokens ? { Authorization: `Bearer ${tokens.access_token}` } : {},
+  })
+}
+
+/** Fetch equity curves for several portfolios (comparison chart). */
+export function comparePortfolios(ids: number[]): Promise<PerformanceOut[]> {
+  return request<PerformanceOut[]>(`/portfolios-compare?ids=${ids.join(',')}`)
+}
+
+/** Generate the onboarding initial proposal for a portfolio. */
+export function getInitialProposal(portfolioId: number): Promise<RecommendationOut[]> {
+  return request<RecommendationOut[]>(`/portfolios/${portfolioId}/initial-proposal`, {
+    method: 'POST',
+  })
+}
+
+/** Approve the pending initial proposal (executes its BUYs). */
+export function approveInitialProposal(portfolioId: number): Promise<RecommendationOut[]> {
+  return request<RecommendationOut[]>(`/portfolios/${portfolioId}/initial-proposal/approve`, {
+    method: 'POST',
+  })
+}
+
+/** List a portfolio's recommendations. */
+export function listRecommendations(
+  portfolioId: number,
+  status?: string,
+): Promise<RecommendationOut[]> {
+  const qs = status ? `&rec_status=${status}` : ''
+  return request<RecommendationOut[]>(`/recommendations?portfolio_id=${portfolioId}${qs}`)
+}
+
+/** Approve one pending recommendation (executes the paper trade). */
+export function approveRecommendation(id: number): Promise<RecommendationOut> {
+  return request<RecommendationOut>(`/recommendations/${id}/approve`, { method: 'POST' })
+}
+
+/** Reject one pending recommendation. */
+export function rejectRecommendation(id: number): Promise<RecommendationOut> {
+  return request<RecommendationOut>(`/recommendations/${id}/reject`, { method: 'POST' })
+}
+
+/** Run the daily recommendation pass for one portfolio now. */
+export function generateRecommendations(portfolioId: number): Promise<RecommendationOut[]> {
+  return request<RecommendationOut[]>(`/portfolios/${portfolioId}/recommendations/generate`, {
+    method: 'POST',
+  })
+}
+
+/** List the strategy library. */
+export function listStrategies(): Promise<StrategyOut[]> {
+  return request<StrategyOut[]>('/strategies')
+}
+
+/** List one strategy's evaluation runs. */
+export function listStrategyRuns(strategyId: number): Promise<StrategyRunOut[]> {
+  return request<StrategyRunOut[]>(`/strategies/${strategyId}/runs`)
+}
+
+/** Fetch a run's simulated trades. */
+export function listRunTrades(runId: number): Promise<BacktestTradeOut[]> {
+  return request<BacktestTradeOut[]>(`/strategy-runs/${runId}/trades`)
+}
+
+/** Trigger the 10/2 train-test evaluation for all strategies. */
+export function evaluateStrategies(maxSymbols = 60): Promise<StrategyRunOut[]> {
+  return request<StrategyRunOut[]>('/strategies/evaluate', {
+    method: 'POST',
+    body: JSON.stringify({ max_symbols: maxSymbols }),
+  })
+}
+
 /** Trigger a synchronous analysis run for selected symbols. */
 export function runAnalysis(params: {
   symbols: string[]

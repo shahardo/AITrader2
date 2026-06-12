@@ -10,9 +10,25 @@ from app.models.analysis import (
 )
 from app.models.instrument import Instrument
 from app.models.price_bar import PriceBar
+from app.models.strategy import (
+    BacktestTrade,
+    Holding,
+    PortfolioModel,
+    Recommendation,
+    Strategy,
+    StrategyRun,
+    TradeModel,
+)
 from app.models.user import User
 
 __all__ = [
+    "Strategy",
+    "StrategyRun",
+    "BacktestTrade",
+    "PortfolioModel",
+    "Holding",
+    "TradeModel",
+    "Recommendation",
     "User",
     "Instrument",
     "PriceBar",

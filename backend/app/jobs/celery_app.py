@@ -1,7 +1,8 @@
-# celery_app.py — Celery application and beat schedule. M1 ships the wiring and a
-# heartbeat task; the daily/weekly pipelines plug in here in Milestones 2-3.
+# celery_app.py — Celery application and beat schedule: nightly daily_pipeline,
+# Sunday weekly_strategy (both in app/jobs/pipelines.py), and a heartbeat task.
 
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import get_settings
 
@@ -25,4 +26,17 @@ def heartbeat() -> str:
 
 celery_app.conf.beat_schedule = {
     "heartbeat-hourly": {"task": "app.jobs.celery_app.heartbeat", "schedule": 3600.0},
+    # Mon-Fri 23:45 Asia/Jerusalem — after the US close (dev plan §7).
+    "daily-pipeline": {
+        "task": "app.jobs.daily_pipeline",
+        "schedule": crontab(hour=23, minute=45, day_of_week="mon-fri"),
+    },
+    # Sunday 08:00 — weekly 10/2 strategy re-evaluation.
+    "weekly-strategy": {
+        "task": "app.jobs.weekly_strategy",
+        "schedule": crontab(hour=8, minute=0, day_of_week="sun"),
+    },
 }
+
+celery_app.autodiscover_tasks(["app.jobs"])
+import app.jobs.pipelines  # noqa: E402,F401 — register pipeline tasks with the worker

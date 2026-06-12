@@ -35,6 +35,23 @@ Milestones 1-2 are implemented:
 - UI: stock detail page (candlestick chart with channel & S/R overlays, indicator
   panel, sentiment drill-down) and the Scores leaderboard with a manual run trigger
 
+**M3 — Strategies & portfolios**
+- Strategy library (momentum, mean-reversion, trend-following, balanced) behind a
+  `TradingStrategy` interface with per-strategy parameter grids
+- Backtest engine: signals on close, fills at next open with commission+slippage,
+  equity curves, CAGR/Sharpe/maxDD/win-rate metrics, full trade log with reasons
+- Weekly evaluator: **10-month train (grid search) / 2-month out-of-sample test**;
+  only test metrics drive selection, with a churn guard (+0.3 Sharpe to switch)
+- Multiple paper portfolios per user, each bound to a strategy; paper broker with
+  cash/holdings invariants; equity-curve reconstruction and comparison
+- Recommendation engine: onboarding initial proposal (approve-to-open) and daily
+  SELL/BUY passes per portfolio with LLM rationales; auto-execute mode
+- Celery beat wiring: nightly `daily_pipeline` (23:45 IL, Mon-Fri) and Sunday
+  `weekly_strategy`
+- UI: Portfolios dashboard (cards, create form, onboarding proposal, holdings,
+  normalized comparison chart), Recommendations feed (approve/reject/generate),
+  Strategy Lab (train vs test metrics, equity curves, trade-by-trade drill-down)
+
 ## Quick start (Docker)
 
 ```bash
