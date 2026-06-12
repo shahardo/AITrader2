@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npx vitest *)",
       "Bash(npx tsc *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(git fetch *)",
+      "Bash(git show-ref *)"
     ]
   }
 }
