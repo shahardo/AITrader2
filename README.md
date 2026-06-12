@@ -52,6 +52,16 @@ Milestones 1-2 are implemented:
   normalized comparison chart), Recommendations feed (approve/reject/generate),
   Strategy Lab (train vs test metrics, equity curves, trade-by-trade drill-down)
 
+**M4 — Product surface**
+- Telegram notifications: one-time-code account linking, daily recommendation
+  digests, trade/strategy-change alerts; in-app notification feed with bell
+- Hot-topics radar: LLM clusters recent headlines into themes; topic deep dives
+  propose 5-15 candidates, **validate every ticker against real price data**
+  (hallucinations dropped), add new names to the universe, and rank them
+- On-demand universe scan: constituents refresh + discovery layer (Yahoo
+  screeners: day gainers / most actives / small-cap gainers) + history sync
+- Settings page: risk/markets/strategy-switch mode, Telegram link, re-scan
+
 ## Quick start (Docker)
 
 ```bash

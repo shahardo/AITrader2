@@ -391,6 +391,111 @@ export function evaluateStrategies(maxSymbols = 60): Promise<StrategyRunOut[]> {
   })
 }
 
+export interface TopicOut {
+  id: number
+  name: string
+  buzz_score: number
+  status: string
+  summary: string
+  updated_at: string
+}
+
+export interface TopicCandidate {
+  symbol: string
+  name: string
+  rationale: string
+  combined_score: number | null
+  validated: boolean
+}
+
+export interface TopicReportOut {
+  id: number
+  topic_id: number
+  topic_name: string
+  summary: string
+  candidates: TopicCandidate[]
+  status: string
+  created_at: string
+}
+
+export interface NotificationOut {
+  id: number
+  kind: string
+  title: string
+  body: string
+  read: boolean
+  created_at: string
+}
+
+export interface ScanOut {
+  id: number
+  status: string
+  stats: Record<string, number>
+  started_at: string
+  finished_at: string | null
+}
+
+/** List hot topics; refresh=true re-runs the LLM radar first. */
+export function listHotTopics(refresh = false): Promise<TopicOut[]> {
+  return request<TopicOut[]>(`/topics/hot${refresh ? '?refresh=true' : ''}`)
+}
+
+/** Run a topic deep dive (synchronous; can take a minute with analysis). */
+export function runDeepDive(topic: string, analyze = true): Promise<TopicReportOut> {
+  return request<TopicReportOut>('/topics/deep-dive', {
+    method: 'POST',
+    body: JSON.stringify({ topic, analyze }),
+  })
+}
+
+/** List recent deep-dive reports. */
+export function listTopicReports(): Promise<TopicReportOut[]> {
+  return request<TopicReportOut[]>('/topic-reports')
+}
+
+/** List the user's notifications. */
+export function listNotifications(): Promise<NotificationOut[]> {
+  return request<NotificationOut[]>('/notifications')
+}
+
+/** Mark a notification read. */
+export async function markNotificationRead(id: number): Promise<void> {
+  const tokens = getTokens()
+  await fetch(`/api/v1/notifications/${id}/read`, {
+    method: 'POST',
+    headers: tokens ? { Authorization: `Bearer ${tokens.access_token}` } : {},
+  })
+}
+
+/** Start Telegram linking; returns the one-time code + instructions. */
+export function startTelegramLink(): Promise<{ code: string; instructions: string }> {
+  return request('/me/telegram-link', { method: 'POST' })
+}
+
+/** Poll for Telegram link completion. */
+export function checkTelegramLink(): Promise<{ linked: boolean }> {
+  return request('/me/telegram-link/check', { method: 'POST' })
+}
+
+/** Update profile fields. */
+export function updateMe(payload: {
+  risk_level?: string
+  markets?: string
+  strategy_switch_mode?: string
+}): Promise<UserOut> {
+  return request<UserOut>('/me', { method: 'PATCH', body: JSON.stringify(payload) })
+}
+
+/** Trigger a universe re-scan (slow: refetches constituents + prices). */
+export function triggerScan(): Promise<ScanOut> {
+  return request<ScanOut>('/scans', { method: 'POST' })
+}
+
+/** Fetch the latest scan record. */
+export function getLatestScan(): Promise<ScanOut | null> {
+  return request<ScanOut | null>('/scans/latest')
+}
+
 /** Trigger a synchronous analysis run for selected symbols. */
 export function runAnalysis(params: {
   symbols: string[]

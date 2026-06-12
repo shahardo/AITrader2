@@ -51,6 +51,7 @@ class User(Base):
         Enum(StrategySwitchMode, name="strategy_switch_mode"), default=StrategySwitchMode.approve
     )
     telegram_chat_id: Mapped[str | None] = mapped_column(String(64), default=None)
+    telegram_link_code: Mapped[str | None] = mapped_column(String(16), default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )

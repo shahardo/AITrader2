@@ -15,6 +15,7 @@ from app.marketdata.yfinance_provider import YFinanceProvider
 from app.models.instrument import Instrument
 from app.models.strategy import PortfolioModel
 from app.models.user import StrategySwitchMode, User
+from app.notify.service import complete_telegram_links, notify
 from app.recommend.engine import generate_daily_recommendations
 from app.sentiment.sources import default_sources
 from app.strategy.evaluator import evaluate_all_strategies, recommend_strategy
@@ -45,12 +46,20 @@ def daily_pipeline(with_sentiment: bool = True) -> dict:
         llm = build_default_provider()
         scores = run_analysis(db, llm, default_sources(), instruments,
                               with_sentiment=with_sentiment)
+        complete_telegram_links(db)
         rec_count = 0
         portfolios = db.scalars(select(PortfolioModel)).all()
         for portfolio in portfolios:
             user = db.get(User, portfolio.user_id)
             recs = generate_daily_recommendations(db, llm, user, portfolio)
             rec_count += len(recs)
+            if recs:
+                lines = [f"{r.action} {db.get(Instrument, r.instrument_id).symbol} "
+                         f"× {r.qty:g} ({r.status})" for r in recs]
+                notify(db, user, "daily_recs",
+                       f"{len(recs)} recommendation(s) for '{portfolio.name}'",
+                       "\n".join(lines))
+        db.commit()
         summary = {"synced_symbols": len(synced), "analyzed": len(scores),
                    "portfolios": len(portfolios), "recommendations": rec_count}
         logger.info("Daily pipeline done: %s", summary)
@@ -82,6 +91,15 @@ def weekly_strategy() -> dict:
             if user.strategy_switch_mode == StrategySwitchMode.auto:
                 portfolio.strategy_id = best.id
                 switched += 1
+                notify(db, user, "strategy_change",
+                       f"Strategy switched to {best.name} for '{portfolio.name}'",
+                       "Weekly out-of-sample evaluation found a better fit "
+                       "(see the Strategy Lab for the full run).")
+            else:
+                notify(db, user, "strategy_change",
+                       f"Suggested strategy for '{portfolio.name}': {best.name}",
+                       "Approve by assigning it on the Portfolios page; details "
+                       "in the Strategy Lab.")
         db.commit()
         summary = {"runs": len(runs), "switched_portfolios": switched}
         logger.info("Weekly strategy done: %s", summary)

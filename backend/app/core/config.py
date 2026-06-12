@@ -18,6 +18,7 @@ class Settings(BaseSettings):
         refresh_token_days: Lifetime of refresh tokens, in days.
         cors_origins: Comma-separated list of allowed CORS origins (frontend URLs).
         groq_api_key: Groq API key for LLM calls (used from Milestone 2 onward).
+        telegram_bot_token: Telegram bot token for notifications (empty disables).
         environment: Deployment environment name ("dev", "test", "prod").
     """
 
@@ -29,6 +30,7 @@ class Settings(BaseSettings):
     refresh_token_days: int = 14
     cors_origins: str = "http://localhost:5173"
     groq_api_key: str = ""
+    telegram_bot_token: str = ""
     environment: str = "dev"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

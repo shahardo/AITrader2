@@ -4,11 +4,14 @@
 import type { ReactElement } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { clearTokens, getTokens } from './api/client'
+import NotificationBell from './components/NotificationBell'
 import LoginPage from './pages/Login'
 import PortfoliosPage from './pages/Portfolios'
 import RecommendationsPage from './pages/Recommendations'
 import ScoresPage from './pages/Scores'
+import SettingsPage from './pages/Settings'
 import StockDetailPage from './pages/StockDetail'
+import TopicsPage from './pages/Topics'
 import StrategyLabPage from './pages/StrategyLab'
 import UniversePage from './pages/Universe'
 
@@ -40,9 +43,16 @@ function NavBar() {
       <Link to="/scores" className="text-sm text-slate-300 hover:text-white">
         Scores
       </Link>
+      <Link to="/topics" className="text-sm text-slate-300 hover:text-white">
+        Topics
+      </Link>
+      <Link to="/settings" className="text-sm text-slate-300 hover:text-white">
+        Settings
+      </Link>
       <span className="ml-auto text-xs text-slate-500">
         Not financial advice — paper trading only
       </span>
+      <NotificationBell />
       <button
         className="rounded bg-slate-800 px-3 py-1 text-sm hover:bg-slate-700"
         onClick={() => {
@@ -84,6 +94,22 @@ export default function App() {
           element={
             <RequireAuth>
               <StrategyLabPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/topics"
+          element={
+            <RequireAuth>
+              <TopicsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RequireAuth>
+              <SettingsPage />
             </RequireAuth>
           }
         />

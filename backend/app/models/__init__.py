@@ -10,6 +10,7 @@ from app.models.analysis import (
 )
 from app.models.instrument import Instrument
 from app.models.price_bar import PriceBar
+from app.models.product import Notification, Scan, Topic, TopicReport
 from app.models.strategy import (
     BacktestTrade,
     Holding,
@@ -22,6 +23,10 @@ from app.models.strategy import (
 from app.models.user import User
 
 __all__ = [
+    "Topic",
+    "TopicReport",
+    "Notification",
+    "Scan",
     "Strategy",
     "StrategyRun",
     "BacktestTrade",
