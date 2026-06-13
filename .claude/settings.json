@@ -23,7 +23,8 @@
       "Bash(npm run lint *)",
       "Bash(npm run test *)",
       "Bash(python -m pytest *)",
-      "Bash(python -m ruff *)"
+      "Bash(python -m ruff *)",
+      "Bash(npm test *)"
     ]
   }
 }

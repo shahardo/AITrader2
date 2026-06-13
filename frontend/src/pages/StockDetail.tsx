@@ -19,6 +19,7 @@ import CandleChart from '../components/CandleChart'
 import CompanyLogo from '../components/CompanyLogo'
 import InfoIcon from '../components/InfoIcon'
 import Spinner from '../components/Spinner'
+import { recommendationAction, RECOMMENDATION_BADGE_CLASSES, type RecommendationAction } from '../lib/recommendation'
 
 type TFn = (key: string, options?: Record<string, unknown>) => string
 
@@ -33,41 +34,17 @@ function signalBadge(signal: -1 | 0 | 1, t: TFn) {
 
 const DESCRIPTION_TRUNCATE_LENGTH = 280
 
-// Combined-score thresholds for the headline BUY/SELL/HOLD recommendation —
-// mirrors the 50-is-neutral convention from ta.scoring.composite_score.
-const RECOMMENDATION_BUY_THRESHOLD = 60
-const RECOMMENDATION_SELL_THRESHOLD = 40
-
 // Sentiment-composite thresholds, matching the per-item badge coloring below.
 const SENTIMENT_POSITIVE_THRESHOLD = 0.15
 const SENTIMENT_NEGATIVE_THRESHOLD = -0.15
 
-type RecommendationAction = 'BUY' | 'SELL' | 'HOLD'
-
-/** Derive the headline action from the combined (or technical-only) score. */
-function recommendationAction(score: number): RecommendationAction {
-  if (score >= RECOMMENDATION_BUY_THRESHOLD) return 'BUY'
-  if (score <= RECOMMENDATION_SELL_THRESHOLD) return 'SELL'
-  return 'HOLD'
-}
-
 /** Badge colors per recommendation action. */
 function recommendationBadge(action: RecommendationAction, t: TFn) {
-  if (action === 'BUY')
-    return (
-      <span className="rounded bg-positive-soft px-3 py-1 text-sm font-semibold text-positive-soft-text">
-        {t('recommendation.actions.buy')}
-      </span>
-    )
-  if (action === 'SELL')
-    return (
-      <span className="rounded bg-negative-soft px-3 py-1 text-sm font-semibold text-negative-soft-text">
-        {t('recommendation.actions.sell')}
-      </span>
-    )
   return (
-    <span className="rounded bg-panel-2 px-3 py-1 text-sm font-semibold text-ink-3">
-      {t('recommendation.actions.hold')}
+    <span
+      className={`rounded px-3 py-1 text-sm font-semibold ${RECOMMENDATION_BADGE_CLASSES[action]}`}
+    >
+      {t(`recommendation.actions.${action.toLowerCase()}`)}
     </span>
   )
 }

@@ -6,8 +6,9 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { listInstruments, type InstrumentOut } from '../api/client'
+import { getLatestScores, listInstruments, type InstrumentOut } from '../api/client'
 import MultiSelectFilter from '../components/MultiSelectFilter'
+import RecommendationBadge from '../components/RecommendationBadge'
 
 const NO_SECTOR = '__none__'
 
@@ -37,6 +38,13 @@ export default function UniversePage() {
     queryKey: ['instruments', search],
     queryFn: () => listInstruments({ search: search || undefined }),
   })
+  const scores = useQuery({ queryKey: ['scores'], queryFn: getLatestScores })
+
+  const scoreBySymbol = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const row of scores.data ?? []) map.set(row.symbol, row.combined_score)
+    return map
+  }, [scores.data])
 
   const exchangeOptions = [
     { value: 'us', label: t('exchangeOptions.us') },
@@ -114,12 +122,13 @@ export default function UniversePage() {
               <th className="text-end">{t('table.lastClose')}</th>
               <th className="text-end">{t('table.asOf')}</th>
               <th className="text-end">{t('table.historyBars')}</th>
+              <th className="text-end">{t('table.recommendation')}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-4 text-center text-ink-3">
+                <td colSpan={8} className="py-4 text-center text-ink-3">
                   {t('noMatches')}
                 </td>
               </tr>
@@ -153,6 +162,13 @@ export default function UniversePage() {
                   </td>
                   <td className="text-end text-ink-3">{inst.last_date ?? '—'}</td>
                   <td className="text-end text-ink-3">{inst.bar_count}</td>
+                  <td className="text-end">
+                    {scoreBySymbol.has(inst.symbol) ? (
+                      <RecommendationBadge score={scoreBySymbol.get(inst.symbol)!} />
+                    ) : (
+                      <span className="text-ink-3">—</span>
+                    )}
+                  </td>
                 </tr>
               ))
             )}

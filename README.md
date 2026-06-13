@@ -38,7 +38,9 @@ Milestones 1-2 are implemented:
   BUY/SELL/HOLD recommendation with a plain-language explanation derived from the
   indicators and sentiment, indicator panel with per-indicator info explanations,
   sentiment drill-down, manual analysis-run trigger with a loading spinner) and
-  the Scores leaderboard, also with a manual run trigger
+  the Scores leaderboard, also with a manual run trigger; the Universe browser
+  shows a colored BUY/SELL/HOLD recommendation badge with its weighted (combined)
+  score for any instrument with a latest score
 
 **M3 — Strategies & portfolios**
 - Strategy library (momentum, mean-reversion, trend-following, balanced) behind a

@@ -20,6 +20,7 @@
     "sector": "Sector",
     "lastClose": "Last close",
     "asOf": "As of",
-    "historyBars": "History (bars)"
+    "historyBars": "History (bars)",
+    "recommendation": "Recommendation"
   }
 }

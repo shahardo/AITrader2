@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import UniversePage from '../pages/Universe'
-import type { InstrumentOut } from '../api/client'
+import type { InstrumentOut, ScoreRow } from '../api/client'
 
 const ROWS: InstrumentOut[] = [
   {
@@ -52,6 +52,41 @@ const ROWS: InstrumentOut[] = [
   },
 ]
 
+const SCORES: ScoreRow[] = [
+  {
+    symbol: 'AAPL',
+    name: 'Apple Inc.',
+    exchange: 'us',
+    date: '2026-06-10',
+    technical_score: 70,
+    sentiment_score: 0.4,
+    combined_score: 72.5,
+    rank: 1,
+  },
+  {
+    symbol: 'MSFT',
+    name: 'Microsoft',
+    exchange: 'us',
+    date: '2026-06-10',
+    technical_score: 30,
+    sentiment_score: -0.2,
+    combined_score: 28.3,
+    rank: 2,
+  },
+]
+
+/** Stub `fetch` to serve `/instruments` and `/scores/latest` from separate fixtures. */
+function stubFetch(instruments: InstrumentOut[], scores: ScoreRow[] = []) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      const body = url.includes('/scores/latest') ? scores : instruments
+      return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
+    }),
+  )
+}
+
 function renderUniverse() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -65,10 +100,7 @@ function renderUniverse() {
 
 describe('UniversePage', () => {
   it('renders instrument rows with price summaries and change indicators', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify(ROWS), { status: 200 })),
-    )
+    stubFetch(ROWS)
     renderUniverse()
     expect(await screen.findByText('AAPL')).toBeInTheDocument()
     expect(screen.getByText('123.45')).toBeInTheDocument()
@@ -78,19 +110,13 @@ describe('UniversePage', () => {
   })
 
   it('shows the empty-state hint when the universe is unloaded', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify([]), { status: 200 })),
-    )
+    stubFetch([])
     renderUniverse()
     expect(await screen.findByText(/no instruments yet/i)).toBeInTheDocument()
   })
 
   it('filters by exchange using the multi-select column filter', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify(ROWS), { status: 200 })),
-    )
+    stubFetch(ROWS)
     renderUniverse()
     await screen.findByText('AAPL')
 
@@ -103,10 +129,7 @@ describe('UniversePage', () => {
   })
 
   it('filters by sector using the multi-select column filter, with multiple sectors selectable', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify(ROWS), { status: 200 })),
-    )
+    stubFetch(ROWS)
     renderUniverse()
     await screen.findByText('AAPL')
 
@@ -122,10 +145,7 @@ describe('UniversePage', () => {
   })
 
   it('shows a no-matches message when filters exclude every row', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify(ROWS), { status: 200 })),
-    )
+    stubFetch(ROWS)
     renderUniverse()
     await screen.findByText('AAPL')
 
@@ -135,5 +155,20 @@ describe('UniversePage', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'No sector' }))
 
     expect(await screen.findByText(/no instruments match/i)).toBeInTheDocument()
+  })
+
+  it('shows a recommendation badge with its weighted score for analyzed stocks, and a dash otherwise', async () => {
+    stubFetch(ROWS, SCORES)
+    renderUniverse()
+    await screen.findByText('AAPL')
+
+    expect(await screen.findByText('72.5')).toBeInTheDocument()
+    expect(screen.getByText('BUY')).toBeInTheDocument()
+    expect(screen.getByText('28.3')).toBeInTheDocument()
+    expect(screen.getByText('SELL')).toBeInTheDocument()
+
+    const tevaRow = screen.getByText('TEVA.TA').closest('tr')
+    expect(tevaRow).not.toBeNull()
+    expect(tevaRow!.lastElementChild?.textContent).toBe('—')
   })
 })
