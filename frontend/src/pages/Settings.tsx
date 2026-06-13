@@ -48,7 +48,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 p-6">
-      <h1 className="text-2xl font-bold">{t('title')}</h1>
+      <h1 className="text-2xl font-bold text-accent">{t('title')}</h1>
 
       <section className="space-y-3 rounded border border-edge bg-panel p-4">
         <h2 className="font-semibold">{t('profile.heading')}</h2>

@@ -209,7 +209,7 @@ export default function PortfoliosPage() {
   return (
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-4 flex items-baseline gap-4">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-accent">{t('title')}</h1>
         {hitRate.data && hitRate.data.evaluated > 0 && (
           <span className="ms-auto rounded bg-panel-2 px-3 py-1 text-sm text-ink-2">
             {t('hitRate', {

@@ -78,7 +78,7 @@ export default function TopicsPage() {
   return (
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-4 flex items-center">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-accent">{t('title')}</h1>
         <button
           onClick={() => refreshRadar.mutate()}
           disabled={refreshRadar.isPending}

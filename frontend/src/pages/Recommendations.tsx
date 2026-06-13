@@ -94,7 +94,7 @@ export default function RecommendationsPage() {
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-4 text-2xl font-bold">{t('title')}</h1>
+      <h1 className="mb-4 text-2xl font-bold text-accent">{t('title')}</h1>
       <div className="mb-4 flex items-center gap-3">
         <select
           aria-label={t('portfolioAriaLabel')}

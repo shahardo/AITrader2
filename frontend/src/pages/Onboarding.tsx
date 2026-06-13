@@ -126,7 +126,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-1 text-2xl font-bold">{t('welcome.heading')}</h1>
+      <h1 className="mb-1 text-2xl font-bold text-accent">{t('welcome.heading')}</h1>
       <p className="text-sm text-ink-3">{t('welcome.subtitle')}</p>
       <p className="mb-6 mt-1 text-xs text-ink-4">
         {me ? t('welcome.signedInAs', { email: me.email }) : ' '}

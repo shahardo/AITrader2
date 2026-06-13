@@ -28,7 +28,7 @@ export default function ScoresPage() {
 
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-4 text-2xl font-bold">{t('title')}</h1>
+      <h1 className="mb-4 text-2xl font-bold text-accent">{t('title')}</h1>
 
       <div className="mb-4 flex gap-2">
         <input

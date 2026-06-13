@@ -70,7 +70,7 @@ export default function StockDetailPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex items-baseline gap-4">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold text-accent">
           <span className="font-mono text-accent-link">{inst.symbol}</span> {inst.name}
         </h1>
         <span className="text-ink-3">
