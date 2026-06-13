@@ -1,19 +1,65 @@
 // Scores.tsx — universe leaderboard page: latest combined/technical/sentiment
 // scores ranked best-first, plus a manual analysis trigger for selected symbols.
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getLatestScores, runAnalysis } from '../api/client'
+import SortArrow, { type SortDirection } from '../components/SortArrow'
 import Spinner from '../components/Spinner'
+
+type SortColumn = 'rank' | 'symbol' | 'name' | 'combined' | 'technical' | 'sentiment' | 'asOf'
 
 /** Leaderboard page at /scores. */
 export default function ScoresPage() {
   const { t } = useTranslation(['scores', 'common'])
   const queryClient = useQueryClient()
   const [symbols, setSymbols] = useState('')
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const scores = useQuery({ queryKey: ['scores'], queryFn: getLatestScores })
+
+  const sorted = useMemo(() => {
+    if (!scores.data || !sortColumn) return scores.data
+    const dir = sortDirection === 'asc' ? 1 : -1
+    return [...scores.data].sort((a, b) => {
+      switch (sortColumn) {
+        case 'rank':
+          return dir * ((a.rank ?? -Infinity) - (b.rank ?? -Infinity))
+        case 'symbol':
+          return dir * a.symbol.localeCompare(b.symbol)
+        case 'name':
+          return dir * a.name.localeCompare(b.name)
+        case 'combined':
+          return dir * (a.combined_score - b.combined_score)
+        case 'technical':
+          return dir * (a.technical_score - b.technical_score)
+        case 'sentiment':
+          return dir * ((a.sentiment_score ?? -Infinity) - (b.sentiment_score ?? -Infinity))
+        case 'asOf':
+          return dir * a.date.localeCompare(b.date)
+        default:
+          return 0
+      }
+    })
+  }, [scores.data, sortColumn, sortDirection])
+
+  /** Toggle sort on a column: ascending on first click, descending on the next. */
+  function toggleSort(column: SortColumn) {
+    if (sortColumn === column) {
+      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  /** aria-sort value for a sortable column header. */
+  function ariaSort(column: SortColumn): 'ascending' | 'descending' | 'none' {
+    if (sortColumn !== column) return 'none'
+    return sortDirection === 'asc' ? 'ascending' : 'descending'
+  }
 
   const run = useMutation({
     mutationFn: () =>
@@ -57,21 +103,70 @@ export default function ScoresPage() {
       {scores.data && scores.data.length === 0 && (
         <p className="text-ink-3">{t('empty')}</p>
       )}
-      {scores.data && scores.data.length > 0 && (
+      {sorted && sorted.length > 0 && (
         <table className="w-full text-start text-sm">
           <thead>
             <tr className="border-b border-edge-2 text-ink-3">
-              <th className="py-2">{t('table.rank')}</th>
-              <th>{t('table.symbol')}</th>
-              <th>{t('table.name')}</th>
-              <th className="text-end">{t('table.combined')}</th>
-              <th className="text-end">{t('table.technical')}</th>
-              <th className="text-end">{t('table.sentiment')}</th>
-              <th className="text-end">{t('table.asOf')}</th>
+              <th
+                className="cursor-pointer select-none py-2 hover:text-ink"
+                onClick={() => toggleSort('rank')}
+                aria-sort={ariaSort('rank')}
+              >
+                {t('table.rank')}
+                <SortArrow active={sortColumn === 'rank'} direction={sortDirection} />
+              </th>
+              <th
+                className="cursor-pointer select-none hover:text-ink"
+                onClick={() => toggleSort('symbol')}
+                aria-sort={ariaSort('symbol')}
+              >
+                {t('table.symbol')}
+                <SortArrow active={sortColumn === 'symbol'} direction={sortDirection} />
+              </th>
+              <th
+                className="cursor-pointer select-none hover:text-ink"
+                onClick={() => toggleSort('name')}
+                aria-sort={ariaSort('name')}
+              >
+                {t('table.name')}
+                <SortArrow active={sortColumn === 'name'} direction={sortDirection} />
+              </th>
+              <th
+                className="cursor-pointer select-none text-end hover:text-ink"
+                onClick={() => toggleSort('combined')}
+                aria-sort={ariaSort('combined')}
+              >
+                {t('table.combined')}
+                <SortArrow active={sortColumn === 'combined'} direction={sortDirection} />
+              </th>
+              <th
+                className="cursor-pointer select-none text-end hover:text-ink"
+                onClick={() => toggleSort('technical')}
+                aria-sort={ariaSort('technical')}
+              >
+                {t('table.technical')}
+                <SortArrow active={sortColumn === 'technical'} direction={sortDirection} />
+              </th>
+              <th
+                className="cursor-pointer select-none text-end hover:text-ink"
+                onClick={() => toggleSort('sentiment')}
+                aria-sort={ariaSort('sentiment')}
+              >
+                {t('table.sentiment')}
+                <SortArrow active={sortColumn === 'sentiment'} direction={sortDirection} />
+              </th>
+              <th
+                className="cursor-pointer select-none text-end hover:text-ink"
+                onClick={() => toggleSort('asOf')}
+                aria-sort={ariaSort('asOf')}
+              >
+                {t('table.asOf')}
+                <SortArrow active={sortColumn === 'asOf'} direction={sortDirection} />
+              </th>
             </tr>
           </thead>
           <tbody>
-            {scores.data.map((row) => (
+            {sorted.map((row) => (
               <tr key={row.symbol} className="border-b border-edge hover:bg-panel">
                 <td className="py-2 text-ink-4">{row.rank ?? '—'}</td>
                 <td>

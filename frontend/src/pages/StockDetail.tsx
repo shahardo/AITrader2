@@ -3,7 +3,7 @@
 // drill-down (composite + scored media items).
 
 import { Fragment, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Trans, useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -15,6 +15,7 @@ import {
   type IndicatorSignal,
   type SnapshotOut,
 } from '../api/client'
+import BackIcon from '../components/BackIcon'
 import CandleChart from '../components/CandleChart'
 import CompanyLogo from '../components/CompanyLogo'
 import InfoIcon from '../components/InfoIcon'
@@ -103,6 +104,7 @@ function recommendationExplanation(snap: SnapshotOut, t: TFn): string {
 export default function StockDetailPage() {
   const { t } = useTranslation(['stockDetail', 'common'])
   const { symbol = '' } = useParams()
+  const navigate = useNavigate()
   const [descExpanded, setDescExpanded] = useState(false)
   const [infoIndicator, setInfoIndicator] = useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -146,6 +148,15 @@ export default function StockDetailPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label={t('common:actions.back')}
+          title={t('common:actions.back')}
+          className="rounded p-1.5 text-ink-3 hover:bg-panel-2 hover:text-ink"
+        >
+          <BackIcon className="h-5 w-5" />
+        </button>
         <h1 className="text-2xl font-bold text-accent">
           <span className="font-mono text-accent-link">{inst.symbol}</span> {inst.name}
         </h1>

@@ -10,13 +10,13 @@ import { useQuery } from '@tanstack/react-query'
 import { getLatestScores, listInstruments, type InstrumentOut } from '../api/client'
 import MultiSelectFilter from '../components/MultiSelectFilter'
 import RecommendationBadge from '../components/RecommendationBadge'
+import SortArrow, { type SortDirection } from '../components/SortArrow'
 import { recommendationAction } from '../lib/recommendation'
 
 const NO_SECTOR = '__none__'
 const NO_RECOMMENDATION = '__none__'
 
 type SortColumn = 'symbol' | 'name' | 'exchange' | 'sector' | 'last_close' | 'recommendation'
-type SortDirection = 'asc' | 'desc'
 
 /** Colored "(±pct% arrow)" suffix for a price change, green for up, red for down. */
 function PriceChange({ pct }: { pct: number }) {
@@ -31,12 +31,6 @@ function PriceChange({ pct }: { pct: number }) {
       {pct.toFixed(2)}% {arrow})
     </span>
   )
-}
-
-/** Up/down arrow shown on the active sort column's header. */
-function SortArrow({ active, direction }: { active: boolean; direction: SortDirection }) {
-  if (!active) return null
-  return <span className="ms-1 inline-block">{direction === 'asc' ? '▲' : '▼'}</span>
 }
 
 /** Universe browser: table of tracked instruments with latest-price summary. */
@@ -267,7 +261,7 @@ export default function UniversePage() {
                         {inst.symbol}
                       </Link>
                     </td>
-                    <td>{inst.name}</td>
+                    <td className="max-w-[160px] truncate">{inst.name}</td>
                     <td className="uppercase">{inst.exchange}</td>
                     <td className="text-ink-3">{inst.sector ?? '—'}</td>
                     <td className="text-end">
