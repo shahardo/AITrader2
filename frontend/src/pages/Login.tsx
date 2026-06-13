@@ -12,6 +12,7 @@ import {
   signup,
 } from '../api/client'
 import { useTheme } from '../contexts/ThemeContext'
+import Logo from '../components/Logo'
 
 /** Login & signup form page. */
 export default function LoginPage() {
@@ -75,7 +76,10 @@ export default function LoginPage() {
             {i18n.language === 'he' ? t('common:language.en') : t('common:language.he')}
           </button>
         </div>
-        <h1 className="text-xl font-bold text-accent">{t('common:appName')}</h1>
+        <h1 className="flex items-center gap-2 text-xl font-bold text-accent">
+          <Logo className="h-8 w-8" />
+          {t('common:appName')}
+        </h1>
         <p className="text-xs text-ink-3">
           {t('tagline')} {t('common:disclaimerShort')}
         </p>

@@ -5,12 +5,17 @@
       "Bash(npx tsc *)",
       "Bash(npx eslint *)",
       "Bash(git fetch *)",
+      "Bash(git status *)",
       "Bash(git show-ref *)",
       "Bash(.venv/Scripts/python.exe -m ruff *)",
       "Bash(.venv/Scripts/python.exe -m pytest *)",
       "Bash(cd * && grep *)",
       "Read(*)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(ls *)",
+      "Bash(curl -s http://localhost:5173 *)",
+      "Skill(run)",
+      "Skill(run:*)"
     ]
   }
 }

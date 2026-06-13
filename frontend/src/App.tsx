@@ -7,6 +7,7 @@ import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'reac
 import { useTranslation } from 'react-i18next'
 import { AUTH_EXPIRED_EVENT, clearTokens, getTokens } from './api/client'
 import { useTheme } from './contexts/ThemeContext'
+import Logo from './components/Logo'
 import NotificationBell from './components/NotificationBell'
 import LoginPage from './pages/Login'
 import OnboardingPage from './pages/Onboarding'
@@ -49,7 +50,10 @@ function SideBar() {
 
   return (
     <aside className="flex w-56 flex-shrink-0 flex-col gap-1 border-e border-edge bg-panel p-4">
-      <span className="mb-4 text-lg font-bold text-accent">{t('common:appName')}</span>
+      <span className="mb-4 flex items-center gap-2 text-lg font-bold text-accent">
+        <Logo className="h-7 w-7" />
+        {t('common:appName')}
+      </span>
       <NavLink to="/" end className={navLinkClass}>
         {t('nav:portfolios')}
       </NavLink>
