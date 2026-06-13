@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  ApiError,
   approveRecommendation,
   generateRecommendations,
   listPortfolios,
@@ -118,8 +119,11 @@ export default function RecommendationsPage() {
       </div>
       {generate.error && (
         <p role="alert" className="mb-3 text-sm text-negative">
-          {t('generateError')}
+          {generate.error instanceof ApiError ? generate.error.message : t('generateError')}
         </p>
+      )}
+      {generate.isSuccess && generate.data.length === 0 && (
+        <p className="mb-3 text-sm text-ink-3">{t('generateEmpty')}</p>
       )}
 
       {portfolios.data && portfolios.data.length === 0 && (

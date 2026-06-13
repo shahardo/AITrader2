@@ -16,7 +16,9 @@
       "Bash(curl -s http://localhost:5173 *)",
       "Skill(run)",
       "Skill(run:*)",
-      "Bash(netstat *)"
+      "Bash(netstat *)",
+      "Bash(pytest *)",
+      "Bash(ruff check *)"
     ]
   }
 }

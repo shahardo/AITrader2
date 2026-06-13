@@ -4,6 +4,7 @@
   "generate": "Generate now",
   "generating": "Analyzing…",
   "generateError": "Generation failed — does this portfolio have a strategy assigned?",
+  "generateEmpty": "No new recommendations today.",
   "noPortfolios": "Create a portfolio first.",
   "pending": "Pending ({{count}})",
   "pendingEmpty": "Nothing awaiting approval.",

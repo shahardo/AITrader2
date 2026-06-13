@@ -259,5 +259,8 @@ def generate_recommendations_now(portfolio_id: int, db: Session = Depends(get_db
                                  ) -> list[RecommendationOut]:
     """Run the daily recommendation pass for one portfolio on demand."""
     portfolio = _own_portfolio(db, user, portfolio_id)
+    if portfolio.strategy_id is None:
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            "Portfolio has no strategy assigned — assign one in the Strategy Lab")
     recs = generate_daily_recommendations(db, build_default_provider(), user, portfolio)
     return [_rec_out(db, r) for r in recs]

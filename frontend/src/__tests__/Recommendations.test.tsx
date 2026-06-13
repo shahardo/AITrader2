@@ -24,12 +24,14 @@ const RECS = [
     created_at: '2026-06-09T00:00:00Z' },
 ]
 
-function mockApi() {
+function mockApi({ generateStatus = 200, generateBody = '[]' } = {}) {
   const mock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
     if (url.includes('/approve'))
       return Promise.resolve(
         new Response(JSON.stringify({ ...RECS[0], status: 'executed' }), { status: 200 }),
       )
+    if (url.includes('/recommendations/generate'))
+      return Promise.resolve(new Response(generateBody, { status: generateStatus }))
     if (url.includes('/recommendations?portfolio_id='))
       return Promise.resolve(new Response(JSON.stringify(RECS), { status: 200 }))
     if (url.endsWith('/portfolios') && !init?.method)
@@ -72,5 +74,26 @@ describe('RecommendationsPage', () => {
         fetchMock.mock.calls.some((c) => (c[0] as string).endsWith('/recommendations/5/approve')),
       ).toBe(true)
     })
+  })
+
+  it('shows a message when generate now finds nothing new', async () => {
+    mockApi({ generateBody: '[]' })
+    renderPage()
+    await screen.findByText('AAPL')
+    await userEvent.click(screen.getByRole('button', { name: /generate now/i }))
+    expect(await screen.findByText(/no new recommendations/i)).toBeInTheDocument()
+  })
+
+  it('shows the backend error when generate now fails', async () => {
+    mockApi({
+      generateStatus: 409,
+      generateBody: JSON.stringify({
+        detail: 'Portfolio has no strategy assigned — assign one in the Strategy Lab',
+      }),
+    })
+    renderPage()
+    await screen.findByText('AAPL')
+    await userEvent.click(screen.getByRole('button', { name: /generate now/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no strategy assigned/i)
   })
 })

@@ -142,6 +142,14 @@ def test_initial_proposal_without_scores_conflicts(client, auth_headers):
     assert resp.status_code == 409
 
 
+def test_generate_recommendations_without_strategy_conflicts(client, auth_headers):
+    portfolio = client.post("/api/v1/portfolios", headers=auth_headers,
+                            json={"name": "P", "initial_capital": 50_000}).json()
+    resp = client.post(f"/api/v1/portfolios/{portfolio['id']}/recommendations/generate",
+                       headers=auth_headers)
+    assert resp.status_code == 409
+
+
 def test_strategies_api_and_evaluate(client, auth_headers, db_session):
     _seed_scored_universe(db_session, [("UP1", 0.5), ("DN1", -0.4)])
     rows = client.get("/api/v1/strategies", headers=auth_headers).json()

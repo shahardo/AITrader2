@@ -4,6 +4,7 @@
   "generate": "הפק כעת",
   "generating": "מנתח…",
   "generateError": "ההפקה נכשלה — האם לתיק הזה משויכת אסטרטגיה?",
+  "generateEmpty": "אין המלצות חדשות להיום.",
   "noPortfolios": "צרו תיק תחילה.",
   "pending": "ממתינות ({{count}})",
   "pendingEmpty": "אין דבר שמחכה לאישור.",
