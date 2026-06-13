@@ -14,11 +14,38 @@
     "test": "מבחן (מחוץ למדגם — קובע את הבחירה)",
     "summary": "Sharpe <strong>{{sharpe}}</strong> · CAGR {{cagr}} · MaxDD {{maxDrawdown}} · ניצחונות {{winRate}} · {{count}} עסקאות"
   },
+  "riskLevels": {
+    "aggressive": "אגרסיבי",
+    "balanced": "מאוזן",
+    "conservative": "סולידי"
+  },
   "card": {
-    "suits": "מתאים ל{{riskFit}}",
+    "suits": "מתאים לפרופיל {{riskFit}}",
     "latestTestSharpe": "Sharpe מבחן אחרון",
     "notEvaluated": "עדיין לא הוערך.",
     "run": "הרצה {{date}} — Sharpe מבחן {{value}}"
+  },
+  "info": {
+    "toggleLabel": "מידע על האסטרטגיה",
+    "readMore": "קריאה נוספת",
+    "strategies": {
+      "momentum": {
+        "explanation": "אסטרטגיות מומנטום קונות נכסים שעלו לאחרונה ומוכרות נכסים שירדו, מתוך הנחה שמגמות אחרונות נוטות להימשך בטווח הקצר-בינוני.",
+        "link": "https://en.wikipedia.org/wiki/Momentum_(finance)"
+      },
+      "mean_reversion": {
+        "explanation": "אסטרטגיות חזרה לממוצע מניחות שמחירים נוטים לחזור לאורך זמן לממוצע ההיסטורי שלהם, ולכן הן קונות נכסים שצנחו ומוכרות כשהם מתאוששים.",
+        "link": "https://en.wikipedia.org/wiki/Mean_reversion_(finance)"
+      },
+      "trend_following": {
+        "explanation": "אסטרטגיות מעקב מגמה נכנסות לפוזיציה בכיוון מגמת מחיר מבוססת ופורשות כאשר המגמה נשברת, במטרה לרכוב על תנועות מתמשכות.",
+        "link": "https://en.wikipedia.org/wiki/Trend_following"
+      },
+      "balanced": {
+        "explanation": "תמהיל מאוזן משלב אותות מגמה ומומנטום עם רף כניסה רגיש פחות, במטרה לכניסות ויציאות מתונות ויציבות יותר.",
+        "link": "https://en.wikipedia.org/wiki/Technical_analysis"
+      }
+    }
   },
   "detail": {
     "summary": "אימון {{trainStart}} → {{trainEnd}} · מבחן (מחוץ למדגם) {{testStart}} → {{testEnd}} · פרמטרים {{params}}",

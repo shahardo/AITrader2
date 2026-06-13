@@ -80,4 +80,27 @@ describe('StrategyLabPage', () => {
     expect(screen.getByText(/"momentum":0.18/)).toBeInTheDocument()
     expect(screen.getByText('525')).toBeInTheDocument()
   })
+
+  it('shows the risk fit label', async () => {
+    mockApi()
+    renderPage()
+    expect(await screen.findByText(/suits aggressive/i)).toBeInTheDocument()
+  })
+
+  it('toggles the strategy info panel with a read-more link', async () => {
+    mockApi()
+    renderPage()
+    await screen.findByText('Momentum')
+
+    expect(screen.queryByText(/momentum strategies buy assets/i)).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /about this strategy/i }))
+    expect(await screen.findByText(/momentum strategies buy assets/i)).toBeInTheDocument()
+    const link = screen.getByRole('link', { name: /read more/i })
+    expect(link).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Momentum_(finance)')
+    expect(link).toHaveAttribute('target', '_blank')
+
+    await userEvent.click(screen.getByRole('button', { name: /about this strategy/i }))
+    expect(screen.queryByText(/momentum strategies buy assets/i)).not.toBeInTheDocument()
+  })
 })

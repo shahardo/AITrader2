@@ -12,6 +12,7 @@ import {
   listStrategyRuns,
   type StrategyRunOut,
 } from '../api/client'
+import InfoIcon from '../components/InfoIcon'
 import LineCompareChart from '../components/LineCompareChart'
 import Spinner from '../components/Spinner'
 
@@ -122,16 +123,19 @@ function RunDetail({ run }: { run: StrategyRunOut }) {
 function StrategyCard({
   strategyId,
   name,
+  kind,
   description,
   riskFit,
 }: {
   strategyId: number
   name: string
+  kind: string
   description: string
   riskFit: string
 }) {
   const { t } = useTranslation('strategyLab')
   const [openRun, setOpenRun] = useState<number | null>(null)
+  const [infoOpen, setInfoOpen] = useState(false)
   const runs = useQuery({
     queryKey: ['strategy-runs', strategyId],
     queryFn: () => listStrategyRuns(strategyId),
@@ -141,7 +145,19 @@ function StrategyCard({
     <div className="rounded border border-edge bg-panel p-4">
       <div className="flex items-baseline gap-3">
         <h2 className="font-semibold">{name}</h2>
-        <span className="text-xs text-ink-4">{t('card.suits', { riskFit })}</span>
+        <button
+          type="button"
+          onClick={() => setInfoOpen((open) => !open)}
+          aria-expanded={infoOpen}
+          aria-label={t('info.toggleLabel')}
+          title={t('info.toggleLabel')}
+          className="text-ink-4 hover:text-accent-link"
+        >
+          <InfoIcon className="h-4 w-4" />
+        </button>
+        <span className="text-xs text-ink-4">
+          {t('card.suits', { riskFit: t(`riskLevels.${riskFit}`, riskFit) })}
+        </span>
         {latest && (
           <span className="ms-auto text-xs text-ink-3">
             {t('card.latestTestSharpe')}{' '}
@@ -151,6 +167,19 @@ function StrategyCard({
           </span>
         )}
       </div>
+      {infoOpen && (
+        <div className="mt-2 rounded bg-panel-2 p-2 text-xs text-ink-3">
+          <p>{t(`info.strategies.${kind}.explanation`)}</p>
+          <a
+            href={t(`info.strategies.${kind}.link`)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent-link hover:underline"
+          >
+            {t('info.readMore')}
+          </a>
+        </div>
+      )}
       <p className="mt-1 text-sm text-ink-3">{description}</p>
       {runs.data && runs.data.length === 0 && (
         <p className="mt-2 text-sm text-ink-4">{t('card.notEvaluated')}</p>
@@ -165,7 +194,9 @@ function StrategyCard({
               date: run.run_date,
               value: run.test_metrics.sharpe?.toFixed(2) ?? '—',
             })}{' '}
-            {openRun === run.id ? '▾' : '▸'}
+            <span className="inline-block rtl:-scale-x-100">
+              {openRun === run.id ? '▾' : '▸'}
+            </span>
           </button>
           {openRun === run.id && <RunDetail run={run} />}
         </div>
@@ -210,6 +241,7 @@ export default function StrategyLabPage() {
             key={s.id}
             strategyId={s.id}
             name={s.name}
+            kind={s.kind}
             description={s.description}
             riskFit={s.risk_fit}
           />

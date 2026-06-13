@@ -14,11 +14,38 @@
     "test": "Test (out-of-sample — drives selection)",
     "summary": "Sharpe <strong>{{sharpe}}</strong> · CAGR {{cagr}} · MaxDD {{maxDrawdown}} · win {{winRate}} · {{count}} trades"
   },
+  "riskLevels": {
+    "aggressive": "aggressive",
+    "balanced": "balanced",
+    "conservative": "conservative"
+  },
   "card": {
     "suits": "suits {{riskFit}}",
     "latestTestSharpe": "latest test Sharpe",
     "notEvaluated": "Not evaluated yet.",
     "run": "Run {{date}} — test Sharpe {{value}}"
+  },
+  "info": {
+    "toggleLabel": "About this strategy",
+    "readMore": "Read more",
+    "strategies": {
+      "momentum": {
+        "explanation": "Momentum strategies buy assets that have been rising and sell those that have been falling, betting that recent trends tend to continue over the short to medium term.",
+        "link": "https://en.wikipedia.org/wiki/Momentum_(finance)"
+      },
+      "mean_reversion": {
+        "explanation": "Mean-reversion strategies assume prices swing back toward their historical average over time, so they buy assets that have fallen sharply and sell once they recover.",
+        "link": "https://en.wikipedia.org/wiki/Mean_reversion_(finance)"
+      },
+      "trend_following": {
+        "explanation": "Trend-following strategies enter in the direction of an established price trend and exit once that trend breaks down, aiming to ride sustained moves.",
+        "link": "https://en.wikipedia.org/wiki/Trend_following"
+      },
+      "balanced": {
+        "explanation": "A balanced blend combines trend and momentum signals with gentler thresholds, aiming for steadier, lower-volatility entries and exits.",
+        "link": "https://en.wikipedia.org/wiki/Technical_analysis"
+      }
+    }
   },
   "detail": {
     "summary": "Train {{trainStart}} → {{trainEnd}} · Test (out-of-sample) {{testStart}} → {{testEnd}} · params {{params}}",
