@@ -7,6 +7,11 @@
   "header": {
     "technicalScore": "Technical score <strong>{{score}}</strong>/100"
   },
+  "actions": {
+    "runAnalysis": "Run analysis",
+    "analyzing": "Analyzing…",
+    "analysisError": "Analysis run failed"
+  },
   "company": {
     "logoAlt": "{{name}} logo",
     "showMore": "Show more",

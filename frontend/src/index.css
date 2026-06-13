@@ -63,7 +63,7 @@
   --c-negative-soft-text: #fca5a5;
   --c-warning: #fbbf24;
 
-  /* Chart-only: trend-channel overlay line (read via cssVar, no @theme utility) */
+  /* Chart-only: trend-channel overlay line (mirrored in lib/chartTheme.ts, no @theme utility) */
   --c-chart-line: #38bdf8;
 
   /* Default accent (Portfolios / login / onboarding): emerald */

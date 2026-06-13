@@ -18,6 +18,7 @@ class InstrumentOut(BaseModel):
     currency: str
     universe_source: UniverseSource
     last_close: float | None = None
+    prev_close: float | None = None
     last_date: date | None = None
     bar_count: int = 0
 

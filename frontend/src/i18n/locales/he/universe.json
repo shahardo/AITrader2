@@ -1,15 +1,18 @@
 {
   "title": "יקום",
   "searchPlaceholder": "חיפוש לפי סימול או שם…",
-  "exchangeFilterAriaLabel": "סינון לפי בורסה",
   "exchangeOptions": {
-    "all": "כל הבורסות",
     "us": "ארה״ב",
     "tase": "בורסת תל אביב"
+  },
+  "filters": {
+    "clear": "ניקוי",
+    "noSector": "אין סקטור"
   },
   "loading": "טוען יקום…",
   "error": "טעינת המכשירים נכשלה",
   "empty": "אין עדיין מכשירים — הריצו את טוען היקום (ראו README) כדי לאכלס אותו.",
+  "noMatches": "אין מכשירים התואמים לסינון הנבחר.",
   "table": {
     "symbol": "סימול",
     "name": "שם",

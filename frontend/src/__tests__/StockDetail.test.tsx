@@ -3,7 +3,8 @@
 // The chart component is mocked (lightweight-charts needs a real canvas).
 
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import StockDetailPage from '../pages/StockDetail'
@@ -115,5 +116,70 @@ describe('StockDetailPage', () => {
     await screen.findByText('72.5')
     expect(screen.queryByRole('link', { name: /apple\.com/i })).not.toBeInTheDocument()
     expect(screen.queryByAltText(/logo/i)).not.toBeInTheDocument()
+  })
+
+  it('renders the company description with forced left-to-right direction', async () => {
+    mockApi({
+      '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+      '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
+      '/instruments/AAPL/sentiment': { status: 200, body: SENTIMENT },
+    })
+    renderPage()
+    const desc = await screen.findByText(/Apple Inc\. designs, manufactures/)
+    expect(desc.closest('p')).toHaveAttribute('dir', 'ltr')
+  })
+
+  it('falls back from the logo image to a favicon and then initials', async () => {
+    mockApi({
+      '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+      '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
+      '/instruments/AAPL/sentiment': { status: 200, body: SENTIMENT },
+    })
+    renderPage()
+    await screen.findByText('72.5')
+
+    const img = screen.getByAltText('Apple Inc. logo') as HTMLImageElement
+    expect(img.src).toContain('logo.clearbit.com/apple.com')
+
+    fireEvent.error(img)
+    const fallback = screen.getByAltText('Apple Inc. logo') as HTMLImageElement
+    expect(fallback.src).toContain('google.com/s2/favicons')
+
+    fireEvent.error(fallback)
+    expect(screen.queryByAltText('Apple Inc. logo')).not.toBeInTheDocument()
+    expect(screen.getByText('A')).toBeInTheDocument()
+  })
+
+  it('runs analysis for this symbol from the header button', async () => {
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith('/analysis/run')) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ analyzed: 1, scores: { AAPL: 75 } }), { status: 200 }),
+        )
+      }
+      const routes: Record<string, { status: number; body: unknown }> = {
+        '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+        '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
+        '/instruments/AAPL/sentiment': { status: 200, body: SENTIMENT },
+      }
+      for (const [suffix, resp] of Object.entries(routes)) {
+        if (url.endsWith(suffix))
+          return Promise.resolve(new Response(JSON.stringify(resp.body), { status: resp.status }))
+      }
+      return Promise.resolve(new Response('{}', { status: 404 }))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    renderPage()
+    await screen.findByText('72.5')
+
+    await userEvent.click(screen.getByRole('button', { name: /run analysis/i }))
+
+    await waitFor(() => {
+      const runCall = fetchMock.mock.calls.find((c) => (c[0] as string).endsWith('/analysis/run'))
+      expect(runCall).toBeTruthy()
+      const body = JSON.parse((runCall![1] as RequestInit).body as string)
+      expect(body.symbols).toEqual(['AAPL'])
+      expect(body.with_sentiment).toBe(true)
+    })
   })
 })

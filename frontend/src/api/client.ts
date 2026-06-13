@@ -28,6 +28,7 @@ export interface InstrumentOut {
   currency: string
   universe_source: string
   last_close: number | null
+  prev_close: number | null
   last_date: string | null
   bar_count: number
 }
@@ -233,13 +234,9 @@ export function getMe(): Promise<UserOut> {
   return request<UserOut>('/me')
 }
 
-/** List universe instruments, optionally filtered. */
-export function listInstruments(params?: {
-  exchange?: 'us' | 'tase'
-  search?: string
-}): Promise<InstrumentOut[]> {
+/** List universe instruments, optionally filtered by a search term. */
+export function listInstruments(params?: { search?: string }): Promise<InstrumentOut[]> {
   const query = new URLSearchParams()
-  if (params?.exchange) query.set('exchange', params.exchange)
   if (params?.search) query.set('search', params.search)
   const qs = query.toString()
   return request<InstrumentOut[]>(`/instruments${qs ? `?${qs}` : ''}`)

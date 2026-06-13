@@ -19,7 +19,8 @@ Milestones 1-2 are implemented:
 - Universe loader: S&P 500 + Nasdaq-100 live from Wikipedia (bundled fallbacks),
   TA-125 from a bundled seed list (`backend/app/universe/data/ta125.csv` — partial
   snapshot, verified by the coverage script)
-- React frontend: login/signup + universe browser
+- React frontend: login/signup + universe browser (multi-select Exchange/Sector filters,
+  last-close change vs. previous close with colored up/down arrow)
 - Tests on both ends, CI via GitHub Actions
 
 **M2 — Analysis engines**
@@ -32,9 +33,10 @@ Milestones 1-2 are implemented:
 - Sentiment pipeline: Yahoo RSS, Google News, Reddit, Globes (TASE) → LLM item
   scoring → recency-decayed composite with confidence weighting
 - Blended stock scores + universe ranking; graceful technical-only degradation
-- UI: stock detail page (company info card with logo/website/description,
-  candlestick chart with channel & S/R overlays, indicator panel, sentiment
-  drill-down) and the Scores leaderboard with a manual run trigger
+- UI: stock detail page (company info card with logo/website/description always
+  shown left-to-right, candlestick chart with channel & S/R overlays, indicator
+  panel, sentiment drill-down, manual analysis-run trigger) and the Scores
+  leaderboard, also with a manual run trigger
 
 **M3 — Strategies & portfolios**
 - Strategy library (momentum, mean-reversion, trend-following, balanced) behind a
