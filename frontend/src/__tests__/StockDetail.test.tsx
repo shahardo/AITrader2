@@ -1,6 +1,7 @@
-// StockDetail.test.tsx — tests for the stock-detail page: indicator panel,
-// sentiment drill-down, and graceful handling when analysis is missing.
-// The chart component is mocked (lightweight-charts needs a real canvas).
+// StockDetail.test.tsx — tests for the stock-detail page: recommendation
+// summary, indicator panel (with info explanations), sentiment drill-down, and
+// graceful handling when analysis is missing. The chart component is mocked
+// (lightweight-charts needs a real canvas).
 
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -29,6 +30,8 @@ const DETAIL = {
 const SNAPSHOT = {
   date: '2026-06-10',
   technical_score: 72.5,
+  combined_score: 68.3,
+  sentiment_score: 0.42,
   signals: {
     rsi: { signal: 1, strength: 0.8, value: 27.1 },
     macd: { signal: -1, strength: 0.4, value: -0.5 },
@@ -81,7 +84,8 @@ describe('StockDetailPage', () => {
     renderPage()
     expect(await screen.findByText('72.5')).toBeInTheDocument()
     expect(screen.getByText('RSI (14)')).toBeInTheDocument()
-    expect(screen.getByText('BUY')).toBeInTheDocument()
+    // BUY appears twice: the recommendation badge and the RSI signal badge.
+    expect(screen.getAllByText('BUY')).toHaveLength(2)
     expect(screen.getByText('SELL')).toBeInTheDocument()
     expect(screen.getByText('Apple beats expectations')).toBeInTheDocument()
     expect(screen.getByTestId('candle-chart')).toBeInTheDocument()
@@ -99,7 +103,8 @@ describe('StockDetailPage', () => {
       '/instruments/AAPL/sentiment': { status: 404, body: { detail: 'No sentiment' } },
     })
     renderPage()
-    expect(await screen.findByText(/no analysis yet/i)).toBeInTheDocument()
+    expect(await screen.findByText(/run analysis to get a recommendation/i)).toBeInTheDocument()
+    expect(screen.getByText(/no analysis yet/i)).toBeInTheDocument()
     expect(screen.getByText(/no sentiment data yet/i)).toBeInTheDocument()
   })
 
@@ -150,13 +155,13 @@ describe('StockDetailPage', () => {
     expect(screen.getByText('A')).toBeInTheDocument()
   })
 
-  it('runs analysis for this symbol from the header button', async () => {
+  it('runs analysis for this symbol from the header button and shows a spinner while pending', async () => {
+    let resolveRun: (value: Response) => void = () => {}
+    const runPromise = new Promise<Response>((resolve) => {
+      resolveRun = resolve
+    })
     const fetchMock = vi.fn().mockImplementation((url: string) => {
-      if (url.endsWith('/analysis/run')) {
-        return Promise.resolve(
-          new Response(JSON.stringify({ analyzed: 1, scores: { AAPL: 75 } }), { status: 200 }),
-        )
-      }
+      if (url.endsWith('/analysis/run')) return runPromise
       const routes: Record<string, { status: number; body: unknown }> = {
         '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
         '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
@@ -174,6 +179,11 @@ describe('StockDetailPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /run analysis/i }))
 
+    expect(await screen.findByText(/analyzing/i)).toBeInTheDocument()
+    expect(document.querySelector('svg.animate-spin')).toBeInTheDocument()
+
+    resolveRun(new Response(JSON.stringify({ analyzed: 1, scores: { AAPL: 75 } }), { status: 200 }))
+
     await waitFor(() => {
       const runCall = fetchMock.mock.calls.find((c) => (c[0] as string).endsWith('/analysis/run'))
       expect(runCall).toBeTruthy()
@@ -181,5 +191,88 @@ describe('StockDetailPage', () => {
       expect(body.symbols).toEqual(['AAPL'])
       expect(body.with_sentiment).toBe(true)
     })
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /run analysis/i })).toBeInTheDocument()
+    })
+  })
+
+  it('shows a BUY recommendation driven by indicators and positive sentiment', async () => {
+    mockApi({
+      '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+      '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
+      '/instruments/AAPL/sentiment': { status: 200, body: SENTIMENT },
+    })
+    renderPage()
+    await screen.findByText('72.5')
+
+    expect(screen.getByText('68.3')).toBeInTheDocument()
+    expect(screen.getByText(/driven mainly by RSI \(14\)/)).toBeInTheDocument()
+    expect(screen.getByText(/recent news sentiment is also positive/i)).toBeInTheDocument()
+  })
+
+  it('shows a SELL recommendation driven by indicators and negative sentiment', async () => {
+    const sellSnapshot = {
+      date: '2026-06-10',
+      technical_score: 30,
+      combined_score: 28,
+      sentiment_score: -0.3,
+      signals: {
+        macd: { signal: -1, strength: 0.6, value: -1.2 },
+        rsi: { signal: 0, strength: 0, value: 50 },
+      },
+      extras: { trend_channel: null, sr_levels: [] },
+    }
+    mockApi({
+      '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+      '/instruments/AAPL/analysis': { status: 200, body: sellSnapshot },
+      '/instruments/AAPL/sentiment': { status: 404, body: { detail: 'No sentiment' } },
+    })
+    renderPage()
+    await screen.findByText('30')
+
+    expect(screen.getByText(/driven mainly by MACD/)).toBeInTheDocument()
+    expect(screen.getByText(/recent news sentiment is also negative/i)).toBeInTheDocument()
+  })
+
+  it('shows a HOLD recommendation with no strong signals and unavailable sentiment', async () => {
+    const holdSnapshot = {
+      date: '2026-06-10',
+      technical_score: 50,
+      combined_score: 50,
+      sentiment_score: null,
+      signals: {
+        rsi: { signal: 0, strength: 0, value: 50 },
+      },
+      extras: { trend_channel: null, sr_levels: [] },
+    }
+    mockApi({
+      '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+      '/instruments/AAPL/analysis': { status: 200, body: holdSnapshot },
+      '/instruments/AAPL/sentiment': { status: 404, body: { detail: 'No sentiment' } },
+    })
+    renderPage()
+    await screen.findByText('50')
+
+    expect(screen.getByText(/no strong signals in either direction/i)).toBeInTheDocument()
+    expect(screen.getByText(/based on technicals only/i)).toBeInTheDocument()
+  })
+
+  it('toggles the indicator explanation when the info icon is clicked', async () => {
+    mockApi({
+      '/instruments/AAPL?days=365': { status: 200, body: DETAIL },
+      '/instruments/AAPL/analysis': { status: 200, body: SNAPSHOT },
+      '/instruments/AAPL/sentiment': { status: 200, body: SENTIMENT },
+    })
+    renderPage()
+    await screen.findByText('RSI (14)')
+
+    expect(screen.queryByText(/Relative Strength Index/)).not.toBeInTheDocument()
+
+    const infoButtons = screen.getAllByRole('button', { name: /about this indicator/i })
+    await userEvent.click(infoButtons[0])
+    expect(screen.getByText(/Relative Strength Index/)).toBeInTheDocument()
+
+    await userEvent.click(infoButtons[0])
+    expect(screen.queryByText(/Relative Strength Index/)).not.toBeInTheDocument()
   })
 })

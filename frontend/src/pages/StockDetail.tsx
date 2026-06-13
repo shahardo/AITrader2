@@ -2,16 +2,28 @@
 // S/R overlays, technical score + per-indicator signal panel, and the sentiment
 // drill-down (composite + scored media items).
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Trans, useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiError, getAnalysis, getInstrument, getSentiment, runAnalysis } from '../api/client'
+import {
+  ApiError,
+  getAnalysis,
+  getInstrument,
+  getSentiment,
+  runAnalysis,
+  type IndicatorSignal,
+  type SnapshotOut,
+} from '../api/client'
 import CandleChart from '../components/CandleChart'
 import CompanyLogo from '../components/CompanyLogo'
+import InfoIcon from '../components/InfoIcon'
+import Spinner from '../components/Spinner'
+
+type TFn = (key: string, options?: Record<string, unknown>) => string
 
 /** Badge colors per signal direction. */
-function signalBadge(signal: -1 | 0 | 1, t: (key: string) => string) {
+function signalBadge(signal: -1 | 0 | 1, t: TFn) {
   if (signal === 1)
     return <span className="rounded bg-positive-soft px-2 py-0.5 text-positive-soft-text">{t('signals.buy')}</span>
   if (signal === -1)
@@ -21,11 +33,101 @@ function signalBadge(signal: -1 | 0 | 1, t: (key: string) => string) {
 
 const DESCRIPTION_TRUNCATE_LENGTH = 280
 
+// Combined-score thresholds for the headline BUY/SELL/HOLD recommendation —
+// mirrors the 50-is-neutral convention from ta.scoring.composite_score.
+const RECOMMENDATION_BUY_THRESHOLD = 60
+const RECOMMENDATION_SELL_THRESHOLD = 40
+
+// Sentiment-composite thresholds, matching the per-item badge coloring below.
+const SENTIMENT_POSITIVE_THRESHOLD = 0.15
+const SENTIMENT_NEGATIVE_THRESHOLD = -0.15
+
+type RecommendationAction = 'BUY' | 'SELL' | 'HOLD'
+
+/** Derive the headline action from the combined (or technical-only) score. */
+function recommendationAction(score: number): RecommendationAction {
+  if (score >= RECOMMENDATION_BUY_THRESHOLD) return 'BUY'
+  if (score <= RECOMMENDATION_SELL_THRESHOLD) return 'SELL'
+  return 'HOLD'
+}
+
+/** Badge colors per recommendation action. */
+function recommendationBadge(action: RecommendationAction, t: TFn) {
+  if (action === 'BUY')
+    return (
+      <span className="rounded bg-positive-soft px-3 py-1 text-sm font-semibold text-positive-soft-text">
+        {t('recommendation.actions.buy')}
+      </span>
+    )
+  if (action === 'SELL')
+    return (
+      <span className="rounded bg-negative-soft px-3 py-1 text-sm font-semibold text-negative-soft-text">
+        {t('recommendation.actions.sell')}
+      </span>
+    )
+  return (
+    <span className="rounded bg-panel-2 px-3 py-1 text-sm font-semibold text-ink-3">
+      {t('recommendation.actions.hold')}
+    </span>
+  )
+}
+
+/** Translated names of indicators signaling `direction`, strongest first. */
+function topIndicatorNames(
+  signals: Record<string, IndicatorSignal>,
+  direction: -1 | 1,
+  t: TFn,
+  limit = 3,
+): string[] {
+  return Object.entries(signals)
+    .filter(([, sig]) => sig.signal === direction && sig.strength > 0)
+    .sort((a, b) => b[1].strength - a[1].strength)
+    .slice(0, limit)
+    .map(([key]) => t(`indicators.${key}`, { defaultValue: key }))
+}
+
+/** Plain-language recommendation explanation from the indicators + sentiment. */
+function recommendationExplanation(snap: SnapshotOut, t: TFn): string {
+  const score = snap.combined_score ?? snap.technical_score
+  const scoreStr = score.toFixed(1)
+  const action = recommendationAction(score)
+
+  let main: string
+  if (action === 'BUY') {
+    const names = topIndicatorNames(snap.signals, 1, t)
+    main = names.length
+      ? t('recommendation.explanation.buyWithIndicators', { score: scoreStr, list: names.join(', ') })
+      : t('recommendation.explanation.buyNoIndicators', { score: scoreStr })
+  } else if (action === 'SELL') {
+    const names = topIndicatorNames(snap.signals, -1, t)
+    main = names.length
+      ? t('recommendation.explanation.sellWithIndicators', { score: scoreStr, list: names.join(', ') })
+      : t('recommendation.explanation.sellNoIndicators', { score: scoreStr })
+  } else {
+    const bullish = topIndicatorNames(snap.signals, 1, t, 1)[0]
+    const bearish = topIndicatorNames(snap.signals, -1, t, 1)[0]
+    main = bullish && bearish
+      ? t('recommendation.explanation.holdMixed', { score: scoreStr, bullish, bearish })
+      : t('recommendation.explanation.holdNeutral', { score: scoreStr })
+  }
+
+  let sentimentText: string
+  if (snap.sentiment_score == null) sentimentText = t('recommendation.sentiment.unavailable')
+  else if (snap.sentiment_score > SENTIMENT_POSITIVE_THRESHOLD)
+    sentimentText = t('recommendation.sentiment.positive')
+  else if (snap.sentiment_score < SENTIMENT_NEGATIVE_THRESHOLD)
+    sentimentText = t('recommendation.sentiment.negative')
+  else sentimentText = t('recommendation.sentiment.neutral')
+
+  return `${main} ${sentimentText}`
+}
+
 /** Stock detail page for /stocks/:symbol. */
 export default function StockDetailPage() {
   const { t } = useTranslation(['stockDetail', 'common'])
   const { symbol = '' } = useParams()
   const [descExpanded, setDescExpanded] = useState(false)
+  const [infoIndicator, setInfoIndicator] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const detail = useQuery({
     queryKey: ['instrument', symbol],
@@ -88,9 +190,10 @@ export default function StockDetailPage() {
             type="button"
             onClick={() => runAnalysisMutation.mutate()}
             disabled={runAnalysisMutation.isPending}
-            className="rounded bg-accent-button px-3 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+            className="flex items-center gap-2 rounded bg-accent-button px-3 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
           >
             {runAnalysisMutation.isPending ? t('actions.analyzing') : t('actions.runAnalysis')}
+            {runAnalysisMutation.isPending && <Spinner className="h-4 w-4" />}
           </button>
         </div>
       </header>
@@ -148,6 +251,27 @@ export default function StockDetailPage() {
       />
 
       <section>
+        <h2 className="mb-2 text-lg font-semibold">{t('recommendation.title')}</h2>
+        {noAnalysisYet && <p className="text-ink-3">{t('recommendation.noAnalysis')}</p>}
+        {snap && (
+          <div className="rounded border border-edge bg-panel p-3">
+            <div className="flex items-center gap-3">
+              {recommendationBadge(recommendationAction(snap.combined_score ?? snap.technical_score), t)}
+              <span className="text-sm text-ink-3">
+                <Trans
+                  t={t}
+                  i18nKey="recommendation.scoreLabel"
+                  values={{ score: (snap.combined_score ?? snap.technical_score).toFixed(1) }}
+                  components={{ strong: <strong className="text-accent-link" /> }}
+                />
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-ink-2">{recommendationExplanation(snap, t)}</p>
+          </div>
+        )}
+      </section>
+
+      <section>
         <h2 className="mb-2 text-lg font-semibold">{t('indicators.title')}</h2>
         {noAnalysisYet && <p className="text-ink-3">{t('indicators.noAnalysis')}</p>}
         {snap && (
@@ -162,14 +286,37 @@ export default function StockDetailPage() {
             </thead>
             <tbody>
               {Object.entries(snap.signals).map(([key, sig]) => (
-                <tr key={key} className="border-b border-edge">
-                  <td className="py-1.5">{t(`indicators.${key}`, { defaultValue: key })}</td>
-                  <td>{signalBadge(sig.signal, t)}</td>
-                  <td className="text-end">{(sig.strength * 100).toFixed(0)}%</td>
-                  <td className="text-end text-ink-3">
-                    {sig.value != null ? sig.value.toFixed(2) : '—'}
-                  </td>
-                </tr>
+                <Fragment key={key}>
+                  <tr className="border-b border-edge">
+                    <td className="py-1.5">
+                      <span className="inline-flex items-center gap-1.5">
+                        {t(`indicators.${key}`, { defaultValue: key })}
+                        <button
+                          type="button"
+                          onClick={() => setInfoIndicator(infoIndicator === key ? null : key)}
+                          aria-expanded={infoIndicator === key}
+                          aria-label={t('indicators.infoLabel')}
+                          title={t('indicators.infoLabel')}
+                          className="text-ink-4 hover:text-accent-link"
+                        >
+                          <InfoIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </td>
+                    <td>{signalBadge(sig.signal, t)}</td>
+                    <td className="text-end">{(sig.strength * 100).toFixed(0)}%</td>
+                    <td className="text-end text-ink-3">
+                      {sig.value != null ? sig.value.toFixed(2) : '—'}
+                    </td>
+                  </tr>
+                  {infoIndicator === key && (
+                    <tr className="border-b border-edge">
+                      <td colSpan={4} className="bg-panel-2 px-2 py-2 text-xs text-ink-3">
+                        {t(`indicators.info.${key}`)}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>

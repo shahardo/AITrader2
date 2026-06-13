@@ -21,8 +21,9 @@
       "Bash(ruff check *)",
       "Bash(npm run build *)",
       "Bash(npm run lint *)",
-      "Bash(npm run test *)"
+      "Bash(npm run test *)",
+      "Bash(python -m pytest *)",
+      "Bash(python -m ruff *)"
     ]
   }
 }
-

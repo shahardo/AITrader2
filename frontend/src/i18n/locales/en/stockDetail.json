@@ -17,9 +17,34 @@
     "showMore": "Show more",
     "showLess": "Show less"
   },
+  "recommendation": {
+    "title": "Recommendation",
+    "noAnalysis": "Run analysis to get a recommendation for this stock.",
+    "scoreLabel": "Combined score <strong>{{score}}</strong>/100",
+    "actions": {
+      "buy": "BUY",
+      "sell": "SELL",
+      "hold": "HOLD"
+    },
+    "explanation": {
+      "buyWithIndicators": "The combined score of {{score}}/100 leans bullish, driven mainly by {{list}}.",
+      "buyNoIndicators": "The combined score of {{score}}/100 leans bullish, though no single indicator stands out strongly.",
+      "sellWithIndicators": "The combined score of {{score}}/100 leans bearish, driven mainly by {{list}}.",
+      "sellNoIndicators": "The combined score of {{score}}/100 leans bearish, though no single indicator stands out strongly.",
+      "holdMixed": "The combined score of {{score}}/100 is close to neutral — {{bullish}} points up while {{bearish}} points down.",
+      "holdNeutral": "The combined score of {{score}}/100 is close to neutral, with no strong signals in either direction."
+    },
+    "sentiment": {
+      "positive": "Recent news sentiment is also positive.",
+      "negative": "Recent news sentiment is also negative.",
+      "neutral": "Recent news sentiment is roughly neutral.",
+      "unavailable": "No recent news sentiment is available, so this is based on technicals only."
+    }
+  },
   "indicators": {
     "title": "Indicators",
     "noAnalysis": "No analysis yet — trigger a run from the Scores page or wait for the nightly pipeline.",
+    "infoLabel": "About this indicator",
     "table": {
       "indicator": "Indicator",
       "signal": "Signal",
@@ -39,7 +64,23 @@
     "williams_r": "Williams %R",
     "cci": "CCI",
     "trend_channel": "Trend channel",
-    "support_resistance": "Support/Resistance"
+    "support_resistance": "Support/Resistance",
+    "info": {
+      "sma_cross": "Compares the 50-day and 200-day simple moving averages. When the shorter average is above the longer one (a \"golden cross\"), it signals an uptrend; when below (a \"death cross\"), it signals a downtrend.",
+      "ema20": "Compares the price to its 20-day exponential moving average. Trading above the EMA suggests short-term upward momentum; trading below suggests downward momentum.",
+      "macd": "MACD tracks the gap between a fast and a slow moving average. A positive histogram (MACD above its signal line) suggests bullish momentum; a negative histogram suggests bearish momentum.",
+      "rsi": "The Relative Strength Index (0-100) measures the speed of recent price moves. Readings below 30 suggest the stock is oversold (a potential bounce); above 70 suggest it's overbought (a potential pullback).",
+      "stochastic": "Stochastic %K compares the closing price to its recent high-low range (0-100). Below 20 suggests oversold conditions; above 80 suggests overbought conditions.",
+      "bollinger": "Bollinger %B shows where the price sits within its volatility bands. Near 0 means the price is at the lower band (a potential bounce); near 1 means it's at the upper band (a potential pullback).",
+      "atr": "Average True Range measures volatility in price units. A sharp rise above its recent average flags higher risk and can precede larger swings in either direction.",
+      "obv": "On-Balance Volume adds or subtracts each day's volume based on price direction, tracking whether buying or selling pressure is accumulating.",
+      "vwap_distance": "Measures how far the price is from its 20-day volume-weighted average price (VWAP). Trading above VWAP suggests buyers are in control; trading below suggests sellers are.",
+      "adx": "The Average Directional Index (0-100) measures trend strength regardless of direction. Readings above 20, combined with +DI/-DI, indicate a strong directional trend (up or down).",
+      "williams_r": "Williams %R (-100 to 0) measures how close the price is to its recent high-low range. Below -80 suggests oversold conditions; above -20 suggests overbought conditions.",
+      "cci": "The Commodity Channel Index measures how far the price has deviated from its statistical average. Readings below -100 suggest oversold conditions; above +100 suggest overbought conditions.",
+      "trend_channel": "Fits a linear price channel over recent history. Price near the lower band of an uptrend (or the upper band of a downtrend) can signal a reversal opportunity in the channel's direction.",
+      "support_resistance": "Identifies price levels where the stock has repeatedly reversed. Trading near a strong support level is a bullish signal; trading near a strong resistance level is a bearish signal."
+    }
   },
   "signals": {
     "buy": "BUY",

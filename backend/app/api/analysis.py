@@ -84,7 +84,9 @@ def instrument_analysis(symbol: str, db: Session = Depends(get_db),
         _user: Authenticated user.
 
     Returns:
-        SnapshotOut: Latest snapshot with per-indicator signals and overlays.
+        SnapshotOut: Latest snapshot with per-indicator signals and overlays, plus
+        the combined/sentiment scores from the same day's leaderboard entry (when
+        available).
 
     Raises:
         HTTPException: 404 when the instrument or snapshot is missing.
@@ -97,7 +99,15 @@ def instrument_analysis(symbol: str, db: Session = Depends(get_db),
     )
     if snap is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No analysis yet for this instrument")
-    return SnapshotOut.model_validate(snap)
+    out = SnapshotOut.model_validate(snap)
+    score = db.scalar(
+        select(StockScore)
+        .where(StockScore.instrument_id == inst.id, StockScore.date == snap.date)
+    )
+    if score is not None:
+        out.combined_score = score.combined_score
+        out.sentiment_score = score.sentiment_score
+    return out
 
 
 @router.get("/instruments/{symbol}/sentiment", response_model=SentimentOut)

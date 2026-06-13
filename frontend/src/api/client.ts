@@ -76,6 +76,8 @@ export interface SnapshotOut {
   technical_score: number
   signals: Record<string, IndicatorSignal>
   extras: { trend_channel: TrendChannelOut | null; sr_levels: SRLevelOut[] }
+  combined_score: number | null
+  sentiment_score: number | null
 }
 
 export interface SentimentItemOut {

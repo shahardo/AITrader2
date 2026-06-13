@@ -34,9 +34,11 @@ Milestones 1-2 are implemented:
   scoring → recency-decayed composite with confidence weighting
 - Blended stock scores + universe ranking; graceful technical-only degradation
 - UI: stock detail page (company info card with logo/website/description always
-  shown left-to-right, candlestick chart with channel & S/R overlays, indicator
-  panel, sentiment drill-down, manual analysis-run trigger) and the Scores
-  leaderboard, also with a manual run trigger
+  shown left-to-right, candlestick chart with channel & S/R overlays, a headline
+  BUY/SELL/HOLD recommendation with a plain-language explanation derived from the
+  indicators and sentiment, indicator panel with per-indicator info explanations,
+  sentiment drill-down, manual analysis-run trigger with a loading spinner) and
+  the Scores leaderboard, also with a manual run trigger
 
 **M3 — Strategies & portfolios**
 - Strategy library (momentum, mean-reversion, trend-following, balanced) behind a

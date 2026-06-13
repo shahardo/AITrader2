@@ -28,6 +28,8 @@ class SnapshotOut(BaseModel):
     technical_score: float
     signals: dict
     extras: dict
+    combined_score: float | None = None
+    sentiment_score: float | None = None
 
     model_config = {"from_attributes": True}
 

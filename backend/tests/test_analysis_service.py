@@ -87,8 +87,11 @@ def test_scores_endpoint_and_analysis_endpoints(client, auth_headers, db_session
 
     snap = client.get("/api/v1/instruments/UPUP/analysis", headers=auth_headers)
     assert snap.status_code == 200
-    assert "sma_cross" in snap.json()["signals"]
-    assert snap.json()["extras"]["trend_channel"] is not None
+    body = snap.json()
+    assert "sma_cross" in body["signals"]
+    assert body["extras"]["trend_channel"] is not None
+    assert body["combined_score"] == body["technical_score"]
+    assert body["sentiment_score"] is None
 
     missing = client.get("/api/v1/instruments/UPUP/sentiment", headers=auth_headers)
     assert missing.status_code == 404  # no sentiment rows yet
