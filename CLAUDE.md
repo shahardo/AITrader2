@@ -151,7 +151,10 @@ redirects to `/login` when no tokens are stored. Pages map ~1:1 to backend domai
 (Portfolios, Recommendations, StrategyLab, Universe, Scores, Topics, Settings, StockDetail,
 Login, Onboarding). Charts use `lightweight-charts` (`CandleChart` — candles +
 trend channel + S/R overlays) and a custom `LineCompareChart` for normalized equity-curve
-comparisons.
+comparisons. Shared components include `MultiSelectFilter` (checkbox-dropdown column filter,
+used by Universe's Exchange/Sector columns) and `CompanyLogo` (Clearbit → Google favicon →
+initials fallback chain for the stock detail company card; pass `key={website}` so callers
+reset the fallback index on a company change).
 
 ### Theming, i18n & RTL (`frontend/src/index.css`, `contexts/ThemeContext.tsx`, `i18n/`)
 
@@ -167,9 +170,12 @@ topics: rose, settings: orange, stock-detail: teal). `ThemeProvider`
 `dark`), applies the `.dark`/`.light` class to `<html>`, and sets `data-section` from the
 current route via `sectionForPath()`. `useTheme()` exposes `{ scheme, toggleScheme }` for the
 header's theme toggle and for chart components. Canvas-based `lightweight-charts` components
-(`CandleChart`, `LineCompareChart`) can't use Tailwind classes, so they read resolved colors
-at runtime via `lib/cssVar.ts#cssVar('--c-panel', fallback)` and re-create the chart when
-`scheme` changes.
+(`CandleChart`, `LineCompareChart`) can't use Tailwind classes, so they get colors from the
+static `lib/chartTheme.ts#chartTheme(scheme)` palette (mirroring the `--c-*` values) and
+re-create the chart when `scheme` changes. A static palette (rather than reading `--c-*` via
+`getComputedStyle`) avoids a race with `ThemeProvider`'s effect that toggles the `.dark`/`.light`
+class on `<html>` — child effects run before parent effects, so a DOM read would always see the
+previous scheme's class.
 
 Translations live in `i18n/locales/{en,he}/*.json`, one namespace per page plus shared
 `common`/`nav` namespaces, loaded synchronously by `i18n/index.ts` (react-i18next +

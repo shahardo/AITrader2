@@ -18,14 +18,14 @@ router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 
 def _latest_bar_summary(db: Session, instrument_ids: list[int]) -> dict[int, tuple]:
-    """Fetch last close/date and bar counts for a set of instruments in two queries.
+    """Fetch last/previous close, last date, and bar counts for instruments.
 
     Args:
         db: Database session.
         instrument_ids: Instruments to summarize.
 
     Returns:
-        dict[int, tuple]: instrument_id -> (last_close, last_date, bar_count).
+        dict[int, tuple]: instrument_id -> (last_close, prev_close, last_date, bar_count).
     """
     if not instrument_ids:
         return {}
@@ -36,23 +36,40 @@ def _latest_bar_summary(db: Session, instrument_ids: list[int]) -> dict[int, tup
             .group_by(PriceBar.instrument_id)
         ).all()
     )
-    latest_date = (
-        select(PriceBar.instrument_id, func.max(PriceBar.date).label("max_date"))
+    ranked = (
+        select(
+            PriceBar.instrument_id,
+            PriceBar.close,
+            PriceBar.date,
+            func.row_number()
+            .over(partition_by=PriceBar.instrument_id, order_by=PriceBar.date.desc())
+            .label("rn"),
+        )
         .where(PriceBar.instrument_id.in_(instrument_ids))
-        .group_by(PriceBar.instrument_id)
         .subquery()
     )
-    latest_rows = db.execute(
-        select(PriceBar.instrument_id, PriceBar.close, PriceBar.date).join(
-            latest_date,
-            (PriceBar.instrument_id == latest_date.c.instrument_id)
-            & (PriceBar.date == latest_date.c.max_date),
+    rows = db.execute(
+        select(ranked.c.instrument_id, ranked.c.close, ranked.c.date, ranked.c.rn).where(
+            ranked.c.rn <= 2
         )
     ).all()
-    summary: dict[int, tuple] = {}
-    for iid, close, bar_date in latest_rows:
-        summary[iid] = (close, bar_date, counts.get(iid, 0))
-    return summary
+    latest: dict[int, dict] = {}
+    for iid, close, bar_date, rn in rows:
+        entry = latest.setdefault(iid, {})
+        if rn == 1:
+            entry["last_close"] = close
+            entry["last_date"] = bar_date
+        else:
+            entry["prev_close"] = close
+    return {
+        iid: (
+            entry.get("last_close"),
+            entry.get("prev_close"),
+            entry.get("last_date"),
+            counts.get(iid, 0),
+        )
+        for iid, entry in latest.items()
+    }
 
 
 @router.get("", response_model=list[InstrumentOut])
@@ -87,7 +104,7 @@ def list_instruments(
     for inst in instruments:
         row = InstrumentOut.model_validate(inst)
         if inst.id in summaries:
-            row.last_close, row.last_date, row.bar_count = summaries[inst.id]
+            row.last_close, row.prev_close, row.last_date, row.bar_count = summaries[inst.id]
         out.append(row)
     return out
 
@@ -139,4 +156,6 @@ def get_instrument(
         detail.last_close = bars[-1].close
         detail.last_date = bars[-1].date
         detail.bar_count = len(bars)
+        if len(bars) >= 2:
+            detail.prev_close = bars[-2].close
     return detail

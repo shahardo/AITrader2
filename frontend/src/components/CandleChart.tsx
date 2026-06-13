@@ -11,7 +11,7 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts'
 import type { PriceBarOut, SRLevelOut, TrendChannelOut } from '../api/client'
-import { cssVar } from '../lib/cssVar'
+import { chartTheme } from '../lib/chartTheme'
 import { useTheme } from '../contexts/ThemeContext'
 
 interface Props {
@@ -29,25 +29,26 @@ export default function CandleChart({ bars, channel, srLevels = [], height = 360
 
   useEffect(() => {
     if (!containerRef.current || bars.length === 0) return
+    const theme = chartTheme(scheme)
     const chart = createChart(containerRef.current, {
       height,
       layout: {
-        background: { type: ColorType.Solid, color: cssVar('--c-panel', '#0f172a') },
-        textColor: cssVar('--c-ink-3', '#94a3b8'),
+        background: { type: ColorType.Solid, color: theme.panel },
+        textColor: theme.ink3,
       },
       grid: {
-        vertLines: { color: cssVar('--c-edge', '#1e293b') },
-        horzLines: { color: cssVar('--c-edge', '#1e293b') },
+        vertLines: { color: theme.edge },
+        horzLines: { color: theme.edge },
       },
-      timeScale: { borderColor: cssVar('--c-edge-2', '#334155') },
-      rightPriceScale: { borderColor: cssVar('--c-edge-2', '#334155') },
+      timeScale: { borderColor: theme.edge2 },
+      rightPriceScale: { borderColor: theme.edge2 },
     })
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: cssVar('--c-positive', '#34d399'),
-      downColor: cssVar('--c-negative', '#f87171'),
+      upColor: theme.positive,
+      downColor: theme.negative,
       borderVisible: false,
-      wickUpColor: cssVar('--c-positive', '#34d399'),
-      wickDownColor: cssVar('--c-negative', '#f87171'),
+      wickUpColor: theme.positive,
+      wickDownColor: theme.negative,
     })
     series.setData(
       bars.map((b) => ({
@@ -68,7 +69,7 @@ export default function CandleChart({ bars, channel, srLevels = [], height = 360
       for (const [price, title] of bands) {
         series.createPriceLine({
           price,
-          color: cssVar('--c-chart-line', '#38bdf8'),
+          color: theme.chartLine,
           lineStyle: title === t('chart.channelMid') ? LineStyle.Dotted : LineStyle.Dashed,
           lineWidth: 1,
           title,
@@ -78,7 +79,7 @@ export default function CandleChart({ bars, channel, srLevels = [], height = 360
     for (const level of srLevels) {
       series.createPriceLine({
         price: level.price,
-        color: level.kind === 'support' ? cssVar('--c-positive', '#34d399') : cssVar('--c-warning', '#fbbf24'),
+        color: level.kind === 'support' ? theme.positive : theme.warning,
         lineStyle: LineStyle.SparseDotted,
         lineWidth: 1,
         title: `${level.kind === 'support' ? t('chart.support') : t('chart.resistance')} (${level.touches})`,

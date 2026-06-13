@@ -5,9 +5,10 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Trans, useTranslation } from 'react-i18next'
-import { useQuery } from '@tanstack/react-query'
-import { ApiError, getAnalysis, getInstrument, getSentiment } from '../api/client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiError, getAnalysis, getInstrument, getSentiment, runAnalysis } from '../api/client'
 import CandleChart from '../components/CandleChart'
+import CompanyLogo from '../components/CompanyLogo'
 
 /** Badge colors per signal direction. */
 function signalBadge(signal: -1 | 0 | 1, t: (key: string) => string) {
@@ -18,17 +19,6 @@ function signalBadge(signal: -1 | 0 | 1, t: (key: string) => string) {
   return <span className="rounded bg-panel-2 px-2 py-0.5 text-ink-3">{t('signals.neutral')}</span>
 }
 
-/** Derive a Clearbit logo URL from a company website, or null if unavailable. */
-function logoUrl(website: string | null): string | null {
-  if (!website) return null
-  try {
-    const host = new URL(website).hostname.replace(/^www\./, '')
-    return `https://logo.clearbit.com/${host}`
-  } catch {
-    return null
-  }
-}
-
 const DESCRIPTION_TRUNCATE_LENGTH = 280
 
 /** Stock detail page for /stocks/:symbol. */
@@ -36,7 +26,7 @@ export default function StockDetailPage() {
   const { t } = useTranslation(['stockDetail', 'common'])
   const { symbol = '' } = useParams()
   const [descExpanded, setDescExpanded] = useState(false)
-  const [logoFailed, setLogoFailed] = useState(false)
+  const queryClient = useQueryClient()
   const detail = useQuery({
     queryKey: ['instrument', symbol],
     queryFn: () => getInstrument(symbol),
@@ -50,6 +40,13 @@ export default function StockDetailPage() {
     queryKey: ['sentiment', symbol],
     queryFn: () => getSentiment(symbol),
     retry: false,
+  })
+  const runAnalysisMutation = useMutation({
+    mutationFn: () => runAnalysis({ symbols: [symbol], with_sentiment: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analysis', symbol] })
+      queryClient.invalidateQueries({ queryKey: ['sentiment', symbol] })
+    },
   })
 
   if (detail.isLoading) return <p className="p-6 text-ink-3">{t('common:actions.loading')}</p>
@@ -69,36 +66,49 @@ export default function StockDetailPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
-      <header className="flex items-baseline gap-4">
+      <header className="flex items-center gap-4">
         <h1 className="text-2xl font-bold text-accent">
           <span className="font-mono text-accent-link">{inst.symbol}</span> {inst.name}
         </h1>
         <span className="text-ink-3">
           {inst.last_close != null ? inst.last_close.toFixed(2) : '—'} {inst.currency}
         </span>
-        {snap && (
-          <span className="ms-auto rounded bg-panel-2 px-3 py-1 text-sm">
-            <Trans
-              t={t}
-              i18nKey="header.technicalScore"
-              values={{ score: snap.technical_score }}
-              components={{ strong: <strong className="text-accent-link" /> }}
-            />
-          </span>
-        )}
+        <div className="ms-auto flex items-center gap-2">
+          {snap && (
+            <span className="rounded bg-panel-2 px-3 py-1 text-sm">
+              <Trans
+                t={t}
+                i18nKey="header.technicalScore"
+                values={{ score: snap.technical_score }}
+                components={{ strong: <strong className="text-accent-link" /> }}
+              />
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => runAnalysisMutation.mutate()}
+            disabled={runAnalysisMutation.isPending}
+            className="rounded bg-accent-button px-3 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+          >
+            {runAnalysisMutation.isPending ? t('actions.analyzing') : t('actions.runAnalysis')}
+          </button>
+        </div>
       </header>
+      {runAnalysisMutation.error && (
+        <p role="alert" className="text-sm text-negative">
+          {t('actions.analysisError')}
+        </p>
+      )}
 
       {(inst.website || inst.description) && (
         <section className="rounded border border-edge bg-panel p-3">
           <div className="flex items-start gap-3">
-            {inst.website && logoUrl(inst.website) && !logoFailed && (
-              <img
-                src={logoUrl(inst.website)!}
-                alt={t('company.logoAlt', { name: inst.name })}
-                className="h-10 w-10 rounded bg-white object-contain p-1"
-                onError={() => setLogoFailed(true)}
-              />
-            )}
+            <CompanyLogo
+              key={inst.website ?? inst.symbol}
+              website={inst.website}
+              name={inst.name}
+              className="h-10 w-10"
+            />
             <div className="min-w-0 flex-1">
               {inst.website && (
                 <a
@@ -111,7 +121,7 @@ export default function StockDetailPage() {
                 </a>
               )}
               {inst.description && (
-                <p className="mt-1 text-sm text-ink-3">
+                <p dir="ltr" className="mt-1 text-start text-sm text-ink-3">
                   {descExpanded || inst.description.length <= DESCRIPTION_TRUNCATE_LENGTH
                     ? inst.description
                     : `${inst.description.slice(0, DESCRIPTION_TRUNCATE_LENGTH)}…`}

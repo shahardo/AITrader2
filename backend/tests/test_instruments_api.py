@@ -32,9 +32,11 @@ def test_list_with_price_summary(client, auth_headers, db_session):
     assert resp.status_code == 200
     rows = {r["symbol"]: r for r in resp.json()}
     assert rows["AAPL"]["last_close"] == 102.5
+    assert rows["AAPL"]["prev_close"] == 101.5
     assert rows["AAPL"]["last_date"] == "2026-06-10"
     assert rows["AAPL"]["bar_count"] == 3
     assert rows["TEVA.TA"]["last_close"] is None
+    assert rows["TEVA.TA"]["prev_close"] is None
 
 
 def test_list_filters_by_exchange_and_search(client, auth_headers, db_session):
@@ -52,6 +54,16 @@ def test_detail_returns_ascending_bars(client, auth_headers, db_session):
     body = resp.json()
     assert [b["date"] for b in body["bars"]] == ["2026-06-09", "2026-06-10"]
     assert body["last_close"] == 102.5
+    assert body["prev_close"] == 101.5
+
+
+def test_detail_prev_close_null_with_single_bar(client, auth_headers, db_session):
+    _seed(db_session)
+    resp = client.get("/api/v1/instruments/aapl?days=1", headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["last_close"] == 102.5
+    assert body["prev_close"] is None
 
 
 def test_detail_404_for_unknown_symbol(client, auth_headers):

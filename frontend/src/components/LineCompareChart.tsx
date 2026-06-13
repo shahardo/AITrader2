@@ -9,7 +9,7 @@ import {
   LineSeries,
   type UTCTimestamp,
 } from 'lightweight-charts'
-import { cssVar } from '../lib/cssVar'
+import { chartTheme } from '../lib/chartTheme'
 import { useTheme } from '../contexts/ThemeContext'
 
 // Series palette tuned for contrast against both the dark and light panel
@@ -36,18 +36,19 @@ export default function LineCompareChart({ curves, normalize = true, height = 30
   useEffect(() => {
     if (!containerRef.current || curves.length === 0) return
     const colors = scheme === 'light' ? LIGHT_COLORS : DARK_COLORS
+    const theme = chartTheme(scheme)
     const chart = createChart(containerRef.current, {
       height,
       layout: {
-        background: { type: ColorType.Solid, color: cssVar('--c-panel', '#0f172a') },
-        textColor: cssVar('--c-ink-3', '#94a3b8'),
+        background: { type: ColorType.Solid, color: theme.panel },
+        textColor: theme.ink3,
       },
       grid: {
-        vertLines: { color: cssVar('--c-edge', '#1e293b') },
-        horzLines: { color: cssVar('--c-edge', '#1e293b') },
+        vertLines: { color: theme.edge },
+        horzLines: { color: theme.edge },
       },
-      timeScale: { borderColor: cssVar('--c-edge-2', '#334155') },
-      rightPriceScale: { borderColor: cssVar('--c-edge-2', '#334155') },
+      timeScale: { borderColor: theme.edge2 },
+      rightPriceScale: { borderColor: theme.edge2 },
     })
     curves.forEach((curve, i) => {
       if (curve.points.length === 0) return
