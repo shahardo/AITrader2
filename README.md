@@ -68,6 +68,8 @@ Milestones 1-2 are implemented:
 - On-demand universe scan: constituents refresh + discovery layer (Yahoo
   screeners: day gainers / most actives / small-cap gainers) + history sync
 - Settings page: risk/markets/strategy-switch mode, Telegram link, re-scan
+- Settings danger zone: clear all app data (keeps accounts), or clear all data
+  and every user account (signs everyone out)
 
 **M5 — Hardening**
 - Outcome tracker (daily 06:00): fills 30-day signed returns on past BUY/SELL

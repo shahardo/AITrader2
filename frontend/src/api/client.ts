@@ -576,3 +576,13 @@ export interface OnboardingStatus {
 export function getOnboardingStatus(): Promise<OnboardingStatus> {
   return request<OnboardingStatus>('/onboarding/status')
 }
+
+/** Danger zone: permanently delete all application data, keeping user accounts. */
+export function clearAllData(): Promise<void> {
+  return request<void>('/admin/clear-data', { method: 'POST' })
+}
+
+/** Danger zone: permanently delete all application data and every user account. */
+export function clearAllDataAndUsers(): Promise<void> {
+  return request<void>('/admin/clear-data-and-users', { method: 'POST' })
+}

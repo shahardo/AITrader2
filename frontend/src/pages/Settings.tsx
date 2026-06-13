@@ -4,9 +4,13 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   checkTelegramLink,
+  clearAllData,
+  clearAllDataAndUsers,
+  clearTokens,
   getLatestScan,
   getMe,
   startTelegramLink,
@@ -19,9 +23,12 @@ import Spinner from '../components/Spinner'
 export default function SettingsPage() {
   const { t } = useTranslation('settings')
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const me = useQuery({ queryKey: ['me'], queryFn: getMe })
   const scan = useQuery({ queryKey: ['scan-latest'], queryFn: getLatestScan })
   const [linkCode, setLinkCode] = useState<string | null>(null)
+  const [confirmClearData, setConfirmClearData] = useState(false)
+  const [confirmClearAll, setConfirmClearAll] = useState(false)
 
   const save = useMutation({
     mutationFn: updateMe,
@@ -43,6 +50,20 @@ export default function SettingsPage() {
   const rescan = useMutation({
     mutationFn: triggerScan,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scan-latest'] }),
+  })
+  const clearData = useMutation({
+    mutationFn: clearAllData,
+    onSuccess: () => {
+      setConfirmClearData(false)
+      queryClient.invalidateQueries()
+    },
+  })
+  const clearAll = useMutation({
+    mutationFn: clearAllDataAndUsers,
+    onSuccess: () => {
+      clearTokens()
+      navigate('/login', { replace: true })
+    },
   })
 
   if (!me.data) return <p className="p-6 text-ink-3">{t('loading')}</p>
@@ -145,6 +166,87 @@ export default function SettingsPage() {
             {t('scan.error')}
           </p>
         )}
+      </section>
+
+      <section className="space-y-4 rounded border border-negative bg-panel p-4">
+        <h2 className="font-semibold text-negative">{t('dangerZone.heading')}</h2>
+
+        <div className="space-y-2">
+          <p className="text-sm text-ink-3">{t('dangerZone.clearData.description')}</p>
+          {confirmClearData ? (
+            <div className="space-y-2">
+              <p className="text-sm text-negative">{t('dangerZone.clearData.confirm')}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => clearData.mutate()}
+                  disabled={clearData.isPending}
+                  className="flex items-center gap-2 rounded bg-negative px-3 py-1.5 text-sm font-semibold text-white hover:bg-negative/80 disabled:opacity-50"
+                >
+                  {t('dangerZone.clearData.confirmButton')}
+                  {clearData.isPending && <Spinner className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={() => setConfirmClearData(false)}
+                  className="rounded bg-panel-2 px-3 py-1.5 text-sm hover:bg-panel-3"
+                >
+                  {t('dangerZone.cancel')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmClearData(true)}
+              className="rounded bg-negative px-3 py-1.5 text-sm font-semibold text-white hover:bg-negative/80"
+            >
+              {t('dangerZone.clearData.button')}
+            </button>
+          )}
+          {clearData.isError && (
+            <p role="alert" className="text-sm text-negative">
+              {t('dangerZone.clearData.error')}
+            </p>
+          )}
+          {clearData.isSuccess && (
+            <p className="text-sm text-positive">{t('dangerZone.clearData.success')}</p>
+          )}
+        </div>
+
+        <div className="space-y-2 border-t border-edge pt-4">
+          <p className="text-sm text-ink-3">{t('dangerZone.clearDataAndUsers.description')}</p>
+          {confirmClearAll ? (
+            <div className="space-y-2">
+              <p className="text-sm text-negative">{t('dangerZone.clearDataAndUsers.confirm')}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => clearAll.mutate()}
+                  disabled={clearAll.isPending}
+                  className="flex items-center gap-2 rounded bg-negative px-3 py-1.5 text-sm font-semibold text-white hover:bg-negative/80 disabled:opacity-50"
+                >
+                  {t('dangerZone.clearDataAndUsers.confirmButton')}
+                  {clearAll.isPending && <Spinner className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={() => setConfirmClearAll(false)}
+                  className="rounded bg-panel-2 px-3 py-1.5 text-sm hover:bg-panel-3"
+                >
+                  {t('dangerZone.cancel')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmClearAll(true)}
+              className="rounded bg-negative px-3 py-1.5 text-sm font-semibold text-white hover:bg-negative/80"
+            >
+              {t('dangerZone.clearDataAndUsers.button')}
+            </button>
+          )}
+          {clearAll.isError && (
+            <p role="alert" className="text-sm text-negative">
+              {t('dangerZone.clearDataAndUsers.error')}
+            </p>
+          )}
+        </div>
       </section>
     </div>
   )

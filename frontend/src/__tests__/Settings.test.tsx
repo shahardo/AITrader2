@@ -1,12 +1,14 @@
 // Settings.test.tsx — tests for the settings page: profile updates, the Telegram
-// link flow (code display + check), and the re-scan trigger.
+// link flow (code display + check), the re-scan trigger, and the danger-zone
+// data-clearing buttons.
 
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import SettingsPage from '../pages/Settings'
+import { getTokens, storeTokens } from '../api/client'
 
 const ME = {
   id: 1, email: 'a@b.com', risk_level: 'balanced', markets: 'both',
@@ -34,6 +36,8 @@ function mockApi() {
                                       started_at: '2026-06-10T00:00:00Z', finished_at: null }),
           { status: 200 }),
       )
+    if (url.endsWith('/admin/clear-data') || url.endsWith('/admin/clear-data-and-users'))
+      return Promise.resolve(new Response(null, { status: 204 }))
     return Promise.resolve(new Response('{}', { status: 200 }))
   })
   vi.stubGlobal('fetch', mock)
@@ -44,8 +48,11 @@ function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter>
-        <SettingsPage />
+      <MemoryRouter initialEntries={['/settings']}>
+        <Routes>
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/login" element={<div>Login page</div>} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -83,6 +90,65 @@ describe('SettingsPage', () => {
           (c) => (c[0] as string).endsWith('/scans') && (c[1] as RequestInit)?.method === 'POST',
         ),
       ).toBe(true)
+    })
+  })
+
+  describe('danger zone', () => {
+    it('clears all data after confirmation, keeping the session', async () => {
+      const fetchMock = mockApi()
+      storeTokens({ access_token: 'a', refresh_token: 'r', token_type: 'bearer' })
+      renderPage()
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Clear all data' }))
+      await userEvent.click(await screen.findByRole('button', { name: /yes, clear all data/i }))
+
+      await waitFor(() => {
+        expect(
+          fetchMock.mock.calls.some(
+            (c) =>
+              (c[0] as string).endsWith('/admin/clear-data') &&
+              (c[1] as RequestInit)?.method === 'POST',
+          ),
+        ).toBe(true)
+      })
+      expect(await screen.findByText('All data cleared.')).toBeInTheDocument()
+      expect(getTokens()).not.toBeNull()
+    })
+
+    it('cancels the clear-all-data confirmation without calling the API', async () => {
+      const fetchMock = mockApi()
+      renderPage()
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Clear all data' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+      expect(screen.getByRole('button', { name: 'Clear all data' })).toBeInTheDocument()
+      expect(
+        fetchMock.mock.calls.some((c) => (c[0] as string).endsWith('/admin/clear-data')),
+      ).toBe(false)
+    })
+
+    it('clears all data and users, signs out, and redirects to /login', async () => {
+      const fetchMock = mockApi()
+      storeTokens({ access_token: 'a', refresh_token: 'r', token_type: 'bearer' })
+      renderPage()
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Clear all data and users' }),
+      )
+      await userEvent.click(await screen.findByRole('button', { name: /yes, delete everything/i }))
+
+      await waitFor(() => {
+        expect(
+          fetchMock.mock.calls.some(
+            (c) =>
+              (c[0] as string).endsWith('/admin/clear-data-and-users') &&
+              (c[1] as RequestInit)?.method === 'POST',
+          ),
+        ).toBe(true)
+      })
+      expect(await screen.findByText('Login page')).toBeInTheDocument()
+      expect(getTokens()).toBeNull()
     })
   })
 })

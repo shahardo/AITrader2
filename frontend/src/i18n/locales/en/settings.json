@@ -37,5 +37,24 @@
     "rerun": "Re-run universe scan",
     "scanning": "Scanning…",
     "error": "Scan failed — check API logs"
+  },
+  "dangerZone": {
+    "heading": "Danger zone",
+    "cancel": "Cancel",
+    "clearData": {
+      "description": "Permanently delete all universe, price, score, portfolio, recommendation, and strategy data for every user. Accounts stay signed in.",
+      "button": "Clear all data",
+      "confirm": "This permanently deletes ALL app data for ALL users — universe, prices, scores, portfolios, recommendations, strategies. This cannot be undone.",
+      "confirmButton": "Yes, clear all data",
+      "success": "All data cleared.",
+      "error": "Failed to clear data — check API logs"
+    },
+    "clearDataAndUsers": {
+      "description": "Permanently delete all application data and every user account. Everyone, including you, will be signed out and must sign up again.",
+      "button": "Clear all data and users",
+      "confirm": "This permanently deletes ALL app data AND ALL user accounts, including yours. You will be signed out and need to sign up again. This cannot be undone.",
+      "confirmButton": "Yes, delete everything",
+      "error": "Failed to clear data — check API logs"
+    }
   }
 }

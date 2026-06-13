@@ -203,6 +203,17 @@ keyed by email). The wizard derives its starting step from the status flags (alr
 steps are skipped) and reuses existing endpoints per step: `PATCH /me` → `POST /scans` →
 `POST /analysis/run` → `POST /portfolios` → initial-proposal generate/approve.
 
+### Admin / danger zone (`app/api/admin.py`, Settings page)
+
+`POST /admin/clear-data` deletes every row from all app-data tables (universe, prices,
+indicator/sentiment/stock scores, LLM call log, topics, notifications, scans, strategies +
+runs + backtest trades, portfolios, holdings, trades, recommendations) in
+children-before-parents order, but leaves `users` untouched — sessions stay valid.
+`POST /admin/clear-data-and-users` does the same and additionally deletes all `User` rows,
+invalidating every access/refresh token. The Settings page's "Danger zone" section exposes
+both behind an inline confirm step; the second one calls `clearTokens()` and redirects to
+`/login` on success.
+
 ### Testing conventions
 
 Backend `tests/conftest.py` provides: `db_session` (fresh in-memory SQLite per test, all
