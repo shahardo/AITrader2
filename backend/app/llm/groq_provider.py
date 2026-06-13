@@ -4,6 +4,7 @@
 
 import logging
 import time
+from typing import Any
 
 from groq import Groq
 
@@ -45,7 +46,7 @@ class GroqProvider(LLMProvider):
                  temperature=0.2, max_tokens=1024) -> LLMResult:
         """Run one chat completion against Groq. See LLMProvider.complete."""
         model = TIER_MODELS[tier]
-        kwargs = {"response_format": {"type": "json_object"}} if json_mode else {}
+        kwargs: dict[str, Any] = {"response_format": {"type": "json_object"}} if json_mode else {}
         start = time.monotonic()
         last_error: Exception | None = None
         for attempt in range(self.max_retries):
