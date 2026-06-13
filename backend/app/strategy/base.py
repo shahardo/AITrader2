@@ -26,6 +26,21 @@ class Decision:
     reasons: dict | None = None
 
 
+def _val(features: pd.DataFrame, day: int, col: str) -> float:
+    """Read one feature value, mapping NaN to 0.0.
+
+    Args:
+        features: Feature frame.
+        day: Positional bar index.
+        col: Column name.
+
+    Returns:
+        float: The value, or 0.0 when missing/NaN.
+    """
+    v = features[col].iloc[day]
+    return 0.0 if pd.isna(v) else float(v)
+
+
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     """Precompute the indicator columns strategies read.
 

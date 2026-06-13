@@ -74,7 +74,10 @@ DB sessions come from `core.db.get_db` (per-request session); authenticated rout
 - **`weekly_strategy`** (Sun 08:00): `strategy.evaluator.evaluate_all_strategies` (10-month
   train / 2-month test) → `recommend_strategy` per portfolio. If
   `user.strategy_switch_mode == auto`, reassigns immediately (subject to the churn guard);
-  otherwise just notifies the user to approve in the Strategy Lab.
+  otherwise just notifies the user to approve in the Strategy Lab. Also runs an inline
+  genetic-algorithm refresh of the "evolved" strategy's gene
+  (`strategy.genetic.run_evolution_and_persist`, `triggered_by="weekly"`), wrapped in
+  try/except so a GA failure never blocks the per-portfolio reassignment loop.
 - **`outcome_tracker`** (daily 06:00, `app/jobs/outcomes.py`): fills `outcome_30d` on
   month-old recommendations for hit-rate stats.
 
@@ -107,16 +110,35 @@ call site must catch `LLMUnavailable` and degrade** (this is the project-wide pa
 - `base.py`: `TradingStrategy` ABC. `build_features(df)` precomputes sma20/50/200, rsi,
   ret_63/ret_126, atr, adx/+DI/-DI once per symbol (vectorized). `decide(features, day,
   holding)` returns a `Decision(action, score, reasons)`.
-- `library.py`: registry of four strategies — momentum, mean_reversion, trend_following,
-  balanced — each with a `param_grid` (grid-search space) and a default `risk_fit`.
+- `library.py`: registry of five strategies — momentum, mean_reversion, trend_following,
+  balanced, evolved — each with a `param_grid` (grid-search space) and a default `risk_fit`.
 - `backtest.py`: signals evaluated on close, fills simulated at next open, with commission +
   slippage; produces equity curve, CAGR/Sharpe/maxDD/win-rate, and a full trade log
   (`triggering_signals` JSON powers the Strategy Lab drill-down).
 - `evaluator.py`: `evaluate_all_strategies` runs **10-month train (grid search) / 2-month
   out-of-sample test** per strategy/symbol set, recording `StrategyRun` rows — only test
-  metrics drive selection. `recommend_strategy` picks the best fit for a user's risk level,
-  requiring a **+0.3 Sharpe improvement** (churn guard) before suggesting a switch away from
-  the current strategy.
+  metrics drive selection. For the "evolved" strategy, the grid is the single live gene
+  (`Strategy.params`, kept in sync by the GA) rather than a static `param_grid`, so the
+  weekly run re-validates it on the fresh test window without overwriting it (`rank=0`).
+  `recommend_strategy` picks the best fit for a user's risk level, requiring a **+0.3 Sharpe
+  improvement** (churn guard) before suggesting a switch away from the current strategy.
+  Shared helpers `evaluation_windows`/`load_features_for_window` are also used by the GA.
+- `evolved.py`: `EvolvedStrategy` ("evolved" kind) combines seven indicator-derived signals
+  (momentum, trend, RSI, ADX-based trend strength, price-vs-SMA200) via a weighted sum
+  compared against entry/exit thresholds — its `params` is a "gene"
+  (`GENE_BOUNDS`/`DEFAULT_GENE`). `describe_gene` renders a human-readable summary (top
+  signals by weight + thresholds) used as `Strategy.description`.
+- `genetic.py`: genetic algorithm (`EvolutionConfig`, `run_evolution`,
+  `run_evolution_and_persist`) that evolves the "evolved" strategy's gene with stdlib
+  `random` — tournament selection, uniform crossover, gaussian mutation, elitism, and a
+  "hall of fame" of the top `TOP_N_CANDIDATES=5` genes by train fitness
+  (`sharpe - risk_weight * |max_drawdown|`). Each hall-of-fame gene is persisted as a
+  `StrategyRun` with `rank` 1-5 (plus its `BacktestTrade` rows from the test window); rank 1
+  becomes the "evolved" strategy's live `params`/`description`. `run_evolution_and_persist`
+  drives `StrategyEvolutionRun.status`/`current_generation`/`fitness_history` for progress
+  polling, used by both the manual `app.jobs.evolve_strategy` Celery task
+  (`POST /strategies/evolve`, polled via `GET /strategy-evolution-runs/{id}` and
+  `GET /strategy-evolution-runs`) and the inline `weekly_strategy` GA pass.
 
 ### Portfolios & recommendations (`app/portfolio/`, `app/recommend/`)
 

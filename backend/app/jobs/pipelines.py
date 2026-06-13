@@ -13,12 +13,13 @@ from app.llm.groq_provider import build_default_provider
 from app.marketdata.service import sync_price_history
 from app.marketdata.yfinance_provider import YFinanceProvider
 from app.models.instrument import Instrument
-from app.models.strategy import PortfolioModel
+from app.models.strategy import PortfolioModel, StrategyEvolutionRun
 from app.models.user import StrategySwitchMode, User
 from app.notify.service import complete_telegram_links, notify
 from app.recommend.engine import generate_daily_recommendations
 from app.sentiment.sources import default_sources
 from app.strategy.evaluator import evaluate_all_strategies, recommend_strategy
+from app.strategy.genetic import EvolutionConfig, run_evolution_and_persist
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +73,11 @@ def daily_pipeline(with_sentiment: bool = True) -> dict:
 def weekly_strategy() -> dict:
     """Weekly job: 10/2 strategy re-evaluation.
 
-    Re-runs the train-test evaluation and reassigns portfolio strategies (auto
-    mode applies immediately; approve mode leaves the assignment untouched and
-    the recommendation surfaces in the Strategy Lab).
+    Re-runs the train-test evaluation, then runs a genetic-algorithm pass to
+    refresh the "evolved" strategy's gene (failures here are logged but never
+    block portfolio reassignment), and finally reassigns portfolio strategies
+    (auto mode applies immediately; approve mode leaves the assignment
+    untouched and the recommendation surfaces in the Strategy Lab).
 
     Returns:
         dict: Run summary counts.
@@ -82,6 +85,16 @@ def weekly_strategy() -> dict:
     db = SessionLocal()
     try:
         runs = evaluate_all_strategies(db, as_of=date.today())
+
+        evo_run = StrategyEvolutionRun(status="running", population_size=50, generations=30,
+                                       risk_weight=1.0, max_symbols=25, triggered_by="weekly")
+        db.add(evo_run)
+        db.commit()
+        try:
+            run_evolution_and_persist(db, evo_run, EvolutionConfig())
+        except Exception:
+            logger.exception("Weekly GA evolution failed")
+
         switched = 0
         for portfolio in db.scalars(select(PortfolioModel)).all():
             user = db.get(User, portfolio.user_id)

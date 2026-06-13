@@ -43,12 +43,16 @@ Milestones 1-2 are implemented:
   score for any instrument with a latest score
 
 **M3 — Strategies & portfolios**
-- Strategy library (momentum, mean-reversion, trend-following, balanced) behind a
+- Strategy library (momentum, mean-reversion, trend-following, balanced, evolved) behind a
   `TradingStrategy` interface with per-strategy parameter grids
 - Backtest engine: signals on close, fills at next open with commission+slippage,
   equity curves, CAGR/Sharpe/maxDD/win-rate metrics, full trade log with reasons
 - Weekly evaluator: **10-month train (grid search) / 2-month out-of-sample test**;
   only test metrics drive selection, with a churn guard (+0.3 Sharpe to switch)
+- Genetic algorithm evolves the "evolved" strategy's signal-weight/threshold gene
+  (stdlib `random`; tournament selection, crossover, mutation, elitism), triggered
+  manually from the Strategy Lab (with live generation/fitness progress) or weekly;
+  keeps the top-5 candidates with their own train/test metrics, equity curves and trades
 - Multiple paper portfolios per user, each bound to a strategy; paper broker with
   cash/holdings invariants; equity-curve reconstruction and comparison
 - Recommendation engine: onboarding initial proposal (approve-to-open) and daily
@@ -100,11 +104,12 @@ Milestones 1-2 are implemented:
 | Job | Schedule (Asia/Jerusalem) | What it does |
 |---|---|---|
 | `daily_pipeline` | Mon-Fri 23:45 | price refresh → indicators+sentiment → scores → per-portfolio recommendations → Telegram digests |
-| `weekly_strategy` | Sun 08:00 | 10-month-train / 2-month-test evaluation → per-portfolio strategy reassignment (per user setting) |
+| `weekly_strategy` | Sun 08:00 | 10-month-train / 2-month-test evaluation → per-portfolio strategy reassignment (per user setting); also refreshes the "evolved" strategy's gene via the genetic algorithm |
 | `outcome_tracker` | daily 06:00 | fills `outcome_30d` on month-old recommendations |
 
 Manual triggers (all available in the UI): `POST /analysis/run`,
-`POST /strategies/evaluate`, `POST /scans`,
+`POST /strategies/evaluate`, `POST /strategies/evolve` (async, poll
+`GET /strategy-evolution-runs/{id}` or `GET /strategy-evolution-runs`), `POST /scans`,
 `POST /portfolios/{id}/recommendations/generate`.
 
 Degradation behavior: with no `GROQ_API_KEY` the pipeline runs technical-only

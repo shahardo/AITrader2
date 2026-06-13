@@ -154,10 +154,10 @@ def test_strategies_api_and_evaluate(client, auth_headers, db_session):
     _seed_scored_universe(db_session, [("UP1", 0.5), ("DN1", -0.4)])
     rows = client.get("/api/v1/strategies", headers=auth_headers).json()
     assert {r["kind"] for r in rows} == {"momentum", "mean_reversion",
-                                         "trend_following", "balanced"}
+                                         "trend_following", "balanced", "evolved"}
     runs = client.post("/api/v1/strategies/evaluate", headers=auth_headers,
                        json={"max_symbols": 5}).json()
-    assert len(runs) == 4
+    assert len(runs) == 5
     run = runs[0]
     assert run["train_metrics"] and run["test_metrics"]
 

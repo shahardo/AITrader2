@@ -5,7 +5,7 @@
 from datetime import UTC, datetime
 from datetime import date as date_type
 
-from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, String
+from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -50,6 +50,9 @@ class StrategyRun(Base):
     test_metrics: Mapped[dict] = mapped_column(JSON, default=dict)
     equity_curve: Mapped[list] = mapped_column(JSON, default=list)  # test window [[date, value]]
     status: Mapped[str] = mapped_column(String(20), default="done")  # done|failed
+    # 0 = normal run; 1-5 = GA candidate rank (1=best) from one evolution run,
+    # sharing the same run_date (see StrategyEvolutionRun).
+    rank: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class BacktestTrade(Base):
@@ -71,6 +74,36 @@ class BacktestTrade(Base):
     qty: Mapped[float] = mapped_column(Float)
     triggering_signals: Mapped[dict] = mapped_column(JSON, default=dict)
     pnl: Mapped[float | None] = mapped_column(Float, default=None)  # set on SELL legs
+
+
+class StrategyEvolutionRun(Base):
+    """One genetic-algorithm run that evolves the 'evolved' strategy's gene.
+
+    Tracks live progress (current_generation, fitness_history) for polling
+    while a manual run is in flight, and links to the rank-1 StrategyRun once
+    done.
+    """
+
+    __tablename__ = "strategy_evolution_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    # pending|running|done|failed
+    triggered_by: Mapped[str] = mapped_column(String(20), default="manual")  # manual|weekly
+    population_size: Mapped[int] = mapped_column(Integer)
+    generations: Mapped[int] = mapped_column(Integer)
+    current_generation: Mapped[int] = mapped_column(Integer, default=0)
+    risk_weight: Mapped[float] = mapped_column(Float, default=1.0)
+    max_symbols: Mapped[int] = mapped_column(Integer, default=25)
+    fitness_history: Mapped[list] = mapped_column(JSON, default=list)
+    strategy_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("strategy_runs.id", ondelete="SET NULL"), default=None
+    )  # the rank-1 (best) StrategyRun, once done
+    error_message: Mapped[str | None] = mapped_column(String(1000), default=None)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
 class PortfolioModel(Base):

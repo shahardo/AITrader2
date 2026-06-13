@@ -28,9 +28,9 @@ def _frame(drift, n=300, seed=3):
     return build_features(df)
 
 
-def test_registry_has_four_strategies():
+def test_registry_has_five_strategies():
     assert set(STRATEGY_REGISTRY) == {"momentum", "mean_reversion",
-                                      "trend_following", "balanced"}
+                                      "trend_following", "balanced", "evolved"}
 
 
 def test_momentum_buys_uptrend_not_downtrend():
@@ -78,7 +78,7 @@ def test_evaluator_runs_all_strategies_with_correct_windows(db_session):
     as_of = date.today()
     runs = evaluate_all_strategies(db_session, as_of=as_of, max_symbols=6)
 
-    assert len(runs) == 4
+    assert len(runs) == 5
     for run in runs:
         # 10/2 split: test = last ~2 months, train ends the day before test starts.
         assert run.test_end == as_of
@@ -86,10 +86,29 @@ def test_evaluator_runs_all_strategies_with_correct_windows(db_session):
         assert (as_of - run.test_start).days == 60
         assert run.train_start == as_of - timedelta(days=365)
         assert "sharpe" in run.train_metrics and "sharpe" in run.test_metrics
+        assert run.rank == 0
     # Trades persisted with reasons for at least one run (uptrending universe).
     assert db_session.query(BacktestTrade).count() > 0
     trade = db_session.query(BacktestTrade).first()
     assert isinstance(trade.triggering_signals, dict)
+
+
+def test_evaluator_uses_live_gene_for_evolved_strategy(db_session):
+    _seed_universe(db_session)
+    strategy_rows = ensure_strategy_rows(db_session)
+    custom_gene = {**strategy_rows["evolved"].params, "entry_threshold": 0.42}
+    strategy_rows["evolved"].params = custom_gene
+    db_session.commit()
+
+    as_of = date.today()
+    runs = evaluate_all_strategies(db_session, as_of=as_of, max_symbols=6)
+
+    evolved_run = next(r for r in runs if r.strategy_id == strategy_rows["evolved"].id)
+    assert evolved_run.chosen_params == custom_gene
+    assert evolved_run.rank == 0
+    # The live gene is re-validated, not overwritten back to the default.
+    db_session.refresh(strategy_rows["evolved"])
+    assert strategy_rows["evolved"].params == custom_gene
 
 
 def test_recommend_strategy_uses_test_metrics_and_churn_guard(db_session):

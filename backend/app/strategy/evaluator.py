@@ -6,6 +6,7 @@
 import logging
 from datetime import date, timedelta
 
+import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -43,6 +44,49 @@ def ensure_strategy_rows(db: Session) -> dict[str, Strategy]:
     return existing
 
 
+def evaluation_windows(as_of: date) -> tuple[date, date, date, date]:
+    """Compute the trailing-year 10/2 train/test windows.
+
+    Args:
+        as_of: Evaluation date; the window covers the trailing 365 days.
+
+    Returns:
+        tuple[date, date, date, date]: (train_start, train_end, test_start, test_end).
+    """
+    test_end = as_of
+    test_start = as_of - timedelta(days=TEST_MONTHS * 30)
+    train_end = test_start - timedelta(days=1)
+    train_start = as_of - timedelta(days=365)
+    return train_start, train_end, test_start, test_end
+
+
+def load_features_for_window(
+    db: Session, symbols: list[str] | None, max_symbols: int
+) -> dict[str, pd.DataFrame]:
+    """Load OHLCV history and precompute features for a symbol universe.
+
+    Args:
+        db: Database session.
+        symbols: Universe subset (defaults to all active instruments).
+        max_symbols: Cap on the number of symbols loaded.
+
+    Returns:
+        dict[str, pd.DataFrame]: symbol -> build_features output, for symbols
+        with at least 120 bars of history.
+    """
+    stmt = select(Instrument).where(Instrument.is_active.is_(True))
+    if symbols:
+        stmt = stmt.where(Instrument.symbol.in_(symbols))
+    instruments = list(db.scalars(stmt))[:max_symbols]
+
+    features = {}
+    for inst in instruments:
+        df = load_ohlcv(db, inst.id, max_bars=600)  # extra history warms up indicators
+        if len(df) >= 120:
+            features[inst.symbol] = build_features(df)
+    return features
+
+
 def evaluate_all_strategies(
     db: Session,
     as_of: date | None = None,
@@ -54,7 +98,9 @@ def evaluate_all_strategies(
 
     Train: grid search over param_grid, picking the cell with the best train
     Sharpe. Test: a single out-of-sample run with the chosen params; test
-    metrics drive all downstream selection.
+    metrics drive all downstream selection. The "evolved" strategy is grid
+    searched over its current persisted gene only (the GA owns evolving it;
+    this just re-validates it on the fresh window).
 
     Args:
         db: Database session (committed).
@@ -68,21 +114,9 @@ def evaluate_all_strategies(
         list[StrategyRun]: The persisted runs, one per strategy.
     """
     as_of = as_of or date.today()
-    test_end = as_of
-    test_start = as_of - timedelta(days=TEST_MONTHS * 30)
-    train_end = test_start - timedelta(days=1)
-    train_start = as_of - timedelta(days=365)
+    train_start, train_end, test_start, test_end = evaluation_windows(as_of)
 
-    stmt = select(Instrument).where(Instrument.is_active.is_(True))
-    if symbols:
-        stmt = stmt.where(Instrument.symbol.in_(symbols))
-    instruments = list(db.scalars(stmt))[:max_symbols]
-
-    features = {}
-    for inst in instruments:
-        df = load_ohlcv(db, inst.id, max_bars=600)  # extra history warms up indicators
-        if len(df) >= 120:
-            features[inst.symbol] = build_features(df)
+    features = load_features_for_window(db, symbols, max_symbols)
     if not features:
         logger.warning("Strategy evaluation skipped: no instruments with history")
         return []
@@ -90,9 +124,11 @@ def evaluate_all_strategies(
     strategy_rows = ensure_strategy_rows(db)
     runs: list[StrategyRun] = []
     for kind, cls in STRATEGY_REGISTRY.items():
-        # Train: pick params by train-window Sharpe.
+        # Train: pick params by train-window Sharpe. The evolved strategy's
+        # "grid" is just its current gene (the GA evolves it separately).
+        grid = [strategy_rows[kind].params] if kind == "evolved" else cls.param_grid
         best_params, best_train = None, None
-        for params in cls.param_grid:
+        for params in grid:
             result = run_backtest(make_strategy(kind, params), features,
                                   train_start, train_end, initial_capital)
             if best_train is None or result.metrics["sharpe"] > best_train["sharpe"]:
@@ -115,7 +151,8 @@ def evaluate_all_strategies(
                 strategy_run_id=run.id, symbol=trade.symbol, side=trade.side,
                 date=trade.date, price=trade.price, qty=trade.qty,
                 triggering_signals=trade.reasons, pnl=trade.pnl))
-        strategy_rows[kind].params = best_params
+        if kind != "evolved":
+            strategy_rows[kind].params = best_params
         runs.append(run)
         logger.info("Evaluated %s: train sharpe %.2f, test sharpe %.2f",
                     kind, best_train["sharpe"], test_result.metrics["sharpe"])

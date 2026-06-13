@@ -23,7 +23,22 @@
     "suits": "מתאים לפרופיל {{riskFit}}",
     "latestTestSharpe": "Sharpe מבחן אחרון",
     "notEvaluated": "עדיין לא הוערך.",
-    "run": "הרצה {{date}} — Sharpe מבחן {{value}}"
+    "run": "הרצה {{date}} — Sharpe מבחן {{value}}",
+    "runCandidate": "הרצה {{date}} — מועמד #{{rank}} — Sharpe מבחן {{value}}"
+  },
+  "evolved": {
+    "populationSize": "גודל אוכלוסייה",
+    "generations": "מספר דורות",
+    "maxSymbols": "מספר מניות מקסימלי",
+    "riskWeight": "משקל סיכון",
+    "build": "בנה אסטרטגיה",
+    "building": "מתפתח (דור {{current}}/{{total}})…",
+    "fitnessChart": "כשירות מיטבית וממוצעת לכל דור",
+    "weights": "משקלי אותות (מועמד #1)",
+    "entryThreshold": "סף כניסה",
+    "exitThreshold": "סף יציאה",
+    "failed": "האבולוציה נכשלה: {{error}}",
+    "neverRun": "לא בוצעה אבולוציה עדיין — הרץ את האלגוריתם הגנטי כדי להתאים גן."
   },
   "info": {
     "toggleLabel": "מידע על האסטרטגיה",
@@ -44,6 +59,10 @@
       "balanced": {
         "explanation": "תמהיל מאוזן משלב אותות מגמה ומומנטום עם רף כניסה רגיש פחות, במטרה לכניסות ויציאות מתונות ויציבות יותר.",
         "link": "https://en.wikipedia.org/wiki/Technical_analysis"
+      },
+      "evolved": {
+        "explanation": "אלגוריתם גנטי מפתח כלל מורכב המשלב כמה אותות אינדיקטורים קיימים עם משקלים וספי כניסה/יציאה, ובוחר לפי תשואה מתואמת סיכון על פני דורות רבים.",
+        "link": "https://en.wikipedia.org/wiki/Genetic_algorithm"
       }
     }
   },

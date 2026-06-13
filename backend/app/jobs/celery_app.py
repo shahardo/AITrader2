@@ -44,5 +44,6 @@ celery_app.conf.beat_schedule = {
 }
 
 celery_app.autodiscover_tasks(["app.jobs"])
-import app.jobs.outcomes  # noqa: E402,F401 — register tasks with the worker
+import app.jobs.evolution  # noqa: E402,F401 — register tasks with the worker
+import app.jobs.outcomes  # noqa: E402,F401
 import app.jobs.pipelines  # noqa: E402,F401
