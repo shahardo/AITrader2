@@ -12,6 +12,7 @@ import {
   runDeepDive,
   type TopicReportOut,
 } from '../api/client'
+import Spinner from '../components/Spinner'
 
 /** One deep-dive report rendered with its ranked candidates. */
 function Report({ report }: { report: TopicReportOut }) {
@@ -82,9 +83,10 @@ export default function TopicsPage() {
         <button
           onClick={() => refreshRadar.mutate()}
           disabled={refreshRadar.isPending}
-          className="ms-auto rounded bg-panel-2 px-3 py-1.5 text-sm hover:bg-panel-3 disabled:opacity-50"
+          className="ms-auto flex items-center gap-2 rounded bg-panel-2 px-3 py-1.5 text-sm hover:bg-panel-3 disabled:opacity-50"
         >
           {refreshRadar.isPending ? t('actions.scanning') : t('actions.refreshRadar')}
+          {refreshRadar.isPending && <Spinner className="h-4 w-4" />}
         </button>
       </div>
 
@@ -126,9 +128,10 @@ export default function TopicsPage() {
           <button
             type="submit"
             disabled={dive.isPending}
-            className="rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+            className="flex items-center gap-2 rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
           >
             {dive.isPending ? t('actions.diving') : t('actions.deepDive')}
+            {dive.isPending && <Spinner className="h-4 w-4" />}
           </button>
         </form>
         {dive.error && (

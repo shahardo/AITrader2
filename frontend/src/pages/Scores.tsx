@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getLatestScores, runAnalysis } from '../api/client'
+import Spinner from '../components/Spinner'
 
 /** Leaderboard page at /scores. */
 export default function ScoresPage() {
@@ -40,9 +41,10 @@ export default function ScoresPage() {
         <button
           onClick={() => run.mutate()}
           disabled={run.isPending || !symbols.trim()}
-          className="rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+          className="flex items-center gap-2 rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
           {run.isPending ? t('analyzing') : t('runAnalysis')}
+          {run.isPending && <Spinner className="h-4 w-4" />}
         </button>
       </div>
       {run.error && (

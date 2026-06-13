@@ -14,6 +14,7 @@ import {
   rejectRecommendation,
   type RecommendationOut,
 } from '../api/client'
+import Spinner from '../components/Spinner'
 
 /** Action badge colored by BUY/SELL. */
 function ActionBadge({ action }: { action: string }) {
@@ -112,9 +113,10 @@ export default function RecommendationsPage() {
         <button
           onClick={() => generate.mutate()}
           disabled={generate.isPending || selected == null}
-          className="rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+          className="flex items-center gap-2 rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
           {generate.isPending ? t('generating') : t('generate')}
+          {generate.isPending && <Spinner className="h-4 w-4" />}
         </button>
       </div>
       {generate.error && (

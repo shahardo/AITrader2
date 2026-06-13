@@ -13,6 +13,7 @@ import {
   triggerScan,
   updateMe,
 } from '../api/client'
+import Spinner from '../components/Spinner'
 
 /** Settings page at /settings. */
 export default function SettingsPage() {
@@ -134,9 +135,10 @@ export default function SettingsPage() {
         <button
           onClick={() => rescan.mutate()}
           disabled={rescan.isPending}
-          className="rounded bg-accent-button px-3 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+          className="flex items-center gap-2 rounded bg-accent-button px-3 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
           {rescan.isPending ? t('scan.scanning') : t('scan.rerun')}
+          {rescan.isPending && <Spinner className="h-4 w-4" />}
         </button>
         {rescan.error && (
           <p role="alert" className="text-sm text-negative">

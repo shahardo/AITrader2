@@ -13,6 +13,7 @@ import {
   type StrategyRunOut,
 } from '../api/client'
 import LineCompareChart from '../components/LineCompareChart'
+import Spinner from '../components/Spinner'
 
 /** Format a metrics dict into compact text. */
 function Metrics({ label, metrics }: { label: string; metrics: Record<string, number> }) {
@@ -190,9 +191,10 @@ export default function StrategyLabPage() {
         <button
           onClick={() => evaluate.mutate()}
           disabled={evaluate.isPending}
-          className="ms-auto rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+          className="ms-auto flex items-center gap-2 rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
         >
           {evaluate.isPending ? t('actions.evaluating') : t('actions.reevaluate')}
+          {evaluate.isPending && <Spinner className="h-4 w-4" />}
         </button>
       </div>
       {evaluate.error && (

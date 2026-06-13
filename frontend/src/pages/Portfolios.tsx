@@ -19,6 +19,7 @@ import {
   type RecommendationOut,
 } from '../api/client'
 import LineCompareChart from '../components/LineCompareChart'
+import Spinner from '../components/Spinner'
 
 /** Create-portfolio inline form. */
 function CreateForm({ onDone }: { onDone: () => void }) {
@@ -138,9 +139,10 @@ function ProposalPanel({ portfolioId, onDone }: { portfolioId: number; onDone: (
             fetchProposal.mutate()
           }}
           disabled={fetchProposal.isPending}
-          className="rounded bg-panel-2 px-3 py-1 text-sm hover:bg-panel-3 disabled:opacity-50"
+          className="flex items-center gap-2 rounded bg-panel-2 px-3 py-1 text-sm hover:bg-panel-3 disabled:opacity-50"
         >
           {fetchProposal.isPending ? t('proposal.building') : t('proposal.propose')}
+          {fetchProposal.isPending && <Spinner className="h-4 w-4" />}
         </button>
       )}
       {error && (

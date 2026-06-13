@@ -21,6 +21,7 @@ import {
   type OnboardingStatus,
   type RecommendationOut,
 } from '../api/client'
+import Spinner from '../components/Spinner'
 
 /** Render an error from a mutation as a red alert line. */
 function ErrorLine({ error }: { error: unknown }) {
@@ -207,9 +208,10 @@ export default function OnboardingPage() {
                 <button
                   onClick={() => loadUniverse.mutate()}
                   disabled={loadUniverse.isPending}
-                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+                  className="flex items-center gap-2 rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                 >
                   {loadUniverse.isPending ? t('universe.loading') : t('universe.loadNow')}
+                  {loadUniverse.isPending && <Spinner className="h-4 w-4" />}
                 </button>
               </>
             )}
@@ -236,9 +238,10 @@ export default function OnboardingPage() {
                 <button
                   onClick={() => firstAnalysis.mutate()}
                   disabled={firstAnalysis.isPending}
-                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+                  className="flex items-center gap-2 rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                 >
                   {firstAnalysis.isPending ? t('analysis.analyzing') : t('analysis.runFirst')}
+                  {firstAnalysis.isPending && <Spinner className="h-4 w-4" />}
                 </button>
               </>
             )}
@@ -305,11 +308,12 @@ export default function OnboardingPage() {
                 <button
                   onClick={() => generateProposal.mutate()}
                   disabled={generateProposal.isPending || portfolioId == null}
-                  className="rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
+                  className="flex items-center gap-2 rounded bg-accent-button px-4 py-2 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
                 >
                   {generateProposal.isPending
                     ? t('recommendations.generating')
                     : t('recommendations.generate')}
+                  {generateProposal.isPending && <Spinner className="h-4 w-4" />}
                 </button>
               </>
             )}

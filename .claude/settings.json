@@ -18,7 +18,10 @@
       "Skill(run:*)",
       "Bash(netstat *)",
       "Bash(pytest *)",
-      "Bash(ruff check *)"
+      "Bash(ruff check *)",
+      "Bash(npm run build *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run test *)"
     ]
   }
 }
