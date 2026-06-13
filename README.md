@@ -77,7 +77,7 @@ Milestones 1-2 are implemented:
 - Per-section accent colors: each nav destination (Portfolios, Recommendations, Strategy Lab,
   Universe, Scores, Topics, Settings, stock detail) gets its own accent hue across both themes
 - Hebrew translation with full RTL layout support, alongside English; switchable from the
-  sidebar and persisted per browser
+  page header and persisted per browser
 
 ## Operations runbook
 

@@ -38,7 +38,7 @@ export default function NotificationBell() {
         )}
       </button>
       {open && (
-        <div className="absolute start-0 z-10 mt-2 max-h-96 w-96 overflow-y-auto rounded border border-edge-2 bg-panel shadow-xl">
+        <div className="absolute end-0 z-10 mt-2 max-h-96 w-96 overflow-y-auto rounded border border-edge-2 bg-panel shadow-xl">
           {(notifications.data?.length ?? 0) === 0 && (
             <p className="p-3 text-sm text-ink-3">{t('notifications.empty')}</p>
           )}

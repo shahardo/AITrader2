@@ -1,8 +1,9 @@
-// App.test.tsx — tests for the app shell's sidebar: links are stacked vertically
-// on the left and the link for the current route is highlighted.
+// App.test.tsx — tests for the app shell: the sidebar's nav links are stacked
+// vertically on the left, the link for the current route is highlighted, and
+// the top header holds the logo plus the bell/theme/language/logout controls.
 
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from '../App'
@@ -31,7 +32,7 @@ function renderApp(path: string) {
 describe('App sidebar', () => {
   it('renders the nav links stacked vertically in a left sidebar', () => {
     renderApp('/recommendations')
-    const sidebar = screen.getByText('AITrader2').closest('aside')
+    const sidebar = screen.getByRole('link', { name: 'Portfolios' }).closest('aside')
     expect(sidebar?.className).toContain('flex-col')
     const links = sidebar!.querySelectorAll('a')
     expect(links.length).toBeGreaterThanOrEqual(7)
@@ -51,5 +52,42 @@ describe('App sidebar', () => {
     const universe = screen.getByRole('link', { name: 'Universe' })
     expect(portfolios.className).not.toContain('text-accent')
     expect(universe.className).toContain('text-accent')
+  })
+})
+
+describe('App header', () => {
+  it('renders the logo on the start side and session controls on the end side', () => {
+    renderApp('/recommendations')
+    const header = screen.getByText('AITrader2').closest('header')
+    expect(header).toBeTruthy()
+    expect(header?.className).toContain('justify-between')
+    expect(within(header!).getByRole('button', { name: 'Log out' })).toBeInTheDocument()
+  })
+
+  it('renders the notification bell in the header', () => {
+    renderApp('/recommendations')
+    const header = screen.getByText('AITrader2').closest('header')
+    expect(within(header!).getByRole('button', { name: 'Notifications' })).toBeInTheDocument()
+  })
+
+  it('renders the theme toggle as an icon-only button', () => {
+    renderApp('/recommendations')
+    const header = screen.getByText('AITrader2').closest('header')
+    const themeButton = within(header!).getByRole('button', { name: /Light mode|מצב בהיר/ })
+    expect(themeButton.textContent?.trim()).toBe('☀️')
+  })
+
+  it('renders the language toggle with a globe icon and an abbreviated language code', () => {
+    renderApp('/recommendations')
+    const header = screen.getByText('AITrader2').closest('header')
+    const langButton = within(header!).getByRole('button', { name: /English|עברית/ })
+    expect(langButton.textContent).toContain('🌐')
+    expect(langButton.textContent?.replace('🌐', '').trim()).toMatch(/^(EN|HE)$/)
+  })
+
+  it('is hidden on the login page', () => {
+    renderApp('/login')
+    expect(document.querySelector('header')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Log out' })).not.toBeInTheDocument()
   })
 })

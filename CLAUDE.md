@@ -144,10 +144,12 @@ attempt, success or not, so it's never repeated) for the stock detail page's com
 
 React 19 + Vite + TanStack Query + Tailwind v4 + react-router-dom v7. `api/client.ts` is a
 single typed fetch client whose interfaces mirror the backend Pydantic schemas, plus
-token storage (`getTokens`/`clearTokens`, localStorage). `App.tsx` defines the route table and
-a `RequireAuth` guard that redirects to `/login` when no tokens are stored. Pages map ~1:1 to
-backend domains (Portfolios, Recommendations, StrategyLab, Universe, Scores, Topics, Settings,
-StockDetail, Login, Onboarding). Charts use `lightweight-charts` (`CandleChart` — candles +
+token storage (`getTokens`/`clearTokens`, localStorage). `App.tsx` defines the route table, a
+left `SideBar` of nav links, a top `components/Header.tsx` (logo + notification bell, theme
+toggle, language toggle, logout — all hidden on `/login`), and a `RequireAuth` guard that
+redirects to `/login` when no tokens are stored. Pages map ~1:1 to backend domains
+(Portfolios, Recommendations, StrategyLab, Universe, Scores, Topics, Settings, StockDetail,
+Login, Onboarding). Charts use `lightweight-charts` (`CandleChart` — candles +
 trend channel + S/R overlays) and a custom `LineCompareChart` for normalized equity-curve
 comparisons.
 
@@ -164,7 +166,7 @@ topics: rose, settings: orange, stock-detail: teal). `ThemeProvider`
 `scheme: 'dark'|'light'` (persisted to `localStorage` as `aitrader-color-scheme`, default
 `dark`), applies the `.dark`/`.light` class to `<html>`, and sets `data-section` from the
 current route via `sectionForPath()`. `useTheme()` exposes `{ scheme, toggleScheme }` for the
-sidebar toggle and for chart components. Canvas-based `lightweight-charts` components
+header's theme toggle and for chart components. Canvas-based `lightweight-charts` components
 (`CandleChart`, `LineCompareChart`) can't use Tailwind classes, so they read resolved colors
 at runtime via `lib/cssVar.ts#cssVar('--c-panel', fallback)` and re-create the chart when
 `scheme` changes.
