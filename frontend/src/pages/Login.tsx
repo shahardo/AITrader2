@@ -5,12 +5,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  ApiError,
   getOnboardingStatus,
   isOnboardingDismissed,
   login,
   signup,
 } from '../api/client'
+import { translateApiError } from '../lib/apiErrors'
 import { useTheme } from '../contexts/ThemeContext'
 import Logo from '../components/Logo'
 
@@ -48,7 +48,7 @@ export default function LoginPage() {
       }
       navigate(destination)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t('errors.somethingWrong'))
+      setError(translateApiError(err, t, t('errors.somethingWrong')))
     } finally {
       setBusy(false)
     }

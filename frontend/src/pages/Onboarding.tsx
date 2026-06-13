@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
-  ApiError,
   approveInitialProposal,
   createPortfolio,
   dismissOnboarding,
@@ -21,16 +20,16 @@ import {
   type OnboardingStatus,
   type RecommendationOut,
 } from '../api/client'
+import { translateApiError } from '../lib/apiErrors'
 import Spinner from '../components/Spinner'
 
 /** Render an error from a mutation as a red alert line. */
 function ErrorLine({ error }: { error: unknown }) {
-  const { t } = useTranslation('onboarding')
+  const { t } = useTranslation(['onboarding', 'common'])
   if (!error) return null
-  const message = error instanceof ApiError ? error.message : t('errors.somethingWrong')
   return (
     <p role="alert" className="text-sm text-negative">
-      {message}
+      {translateApiError(error, t, t('errors.somethingWrong'))}
     </p>
   )
 }

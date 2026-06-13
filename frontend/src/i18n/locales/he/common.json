@@ -23,5 +23,14 @@
     "ariaLabel": "התראות",
     "empty": "אין התראות עדיין.",
     "title": "התראות"
+  },
+  "apiErrors": {
+    "portfolioNotFound": "התיק לא נמצא",
+    "portfolioNoStrategy": "לתיק אין אסטרטגיה משויכת — הקצו אחת במעבדת האסטרטגיות",
+    "noUniverseScores": "אין עדיין ציוני יוניברס — הריצו ניתוח קודם",
+    "noPendingProposal": "אין הצעה ראשונית בהמתנה",
+    "unknownStrategy": "אסטרטגיה לא ידועה",
+    "emailAlreadyRegistered": "כתובת האימייל הזו רשומה כבר במערכת",
+    "invalidCredentials": "אימייל או סיסמה שגויים"
   }
 }

@@ -6,7 +6,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  ApiError,
   approveRecommendation,
   generateRecommendations,
   listPortfolios,
@@ -14,6 +13,7 @@ import {
   rejectRecommendation,
   type RecommendationOut,
 } from '../api/client'
+import { translateApiError } from '../lib/apiErrors'
 import Spinner from '../components/Spinner'
 
 /** Action badge colored by BUY/SELL. */
@@ -121,7 +121,7 @@ export default function RecommendationsPage() {
       </div>
       {generate.error && (
         <p role="alert" className="mb-3 text-sm text-negative">
-          {generate.error instanceof ApiError ? generate.error.message : t('generateError')}
+          {translateApiError(generate.error, t, t('generateError'))}
         </p>
       )}
       {generate.isSuccess && generate.data.length === 0 && (

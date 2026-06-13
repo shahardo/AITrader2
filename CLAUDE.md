@@ -187,6 +187,11 @@ properties (`ms-*`/`me-*`/`ps-*`/`pe-*`/`text-start`/`text-end`/`border-s*`/`bor
 `start-*`/`end-*`) instead of physical ones (`ml-*`/`mr-*`/`pl-*`/`pr-*`/`text-left`/
 `text-right`/`left-*`/`right-*`) so layouts mirror automatically. API-returned data (symbols,
 strategy names/descriptions, LLM-written rationales) is never translated — only UI chrome.
+Backend `HTTPException` `detail` strings are the one exception: they're plain English, but
+Login/Onboarding/Recommendations show them verbatim as alerts, so
+`lib/apiErrors.ts#translateApiError` maps known `detail` strings to `common:apiErrors.*` keys
+(falling back to the raw English for unmapped messages) — add new entries there when a new
+user-facing `HTTPException` detail is introduced.
 
 ### Onboarding (`app/api/onboarding.py`, `frontend/src/pages/Onboarding.tsx`)
 

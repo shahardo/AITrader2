@@ -23,5 +23,14 @@
     "ariaLabel": "Notifications",
     "empty": "No notifications yet.",
     "title": "Notifications"
+  },
+  "apiErrors": {
+    "portfolioNotFound": "Portfolio not found",
+    "portfolioNoStrategy": "Portfolio has no strategy assigned — assign one in the Strategy Lab",
+    "noUniverseScores": "No universe scores yet — run an analysis first",
+    "noPendingProposal": "No pending initial proposal",
+    "unknownStrategy": "Unknown strategy",
+    "emailAlreadyRegistered": "Email already registered",
+    "invalidCredentials": "Invalid email or password"
   }
 }
