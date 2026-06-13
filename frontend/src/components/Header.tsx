@@ -1,12 +1,13 @@
 // Header.tsx — top page header: app logo on the start side, and the
-// notification bell, theme toggle, language toggle, and logout button on the
-// end side. Hidden on the login page.
+// notification bell, theme toggle, language toggle, and icon-only logout
+// button on the end side. Hidden on the login page.
 
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { clearTokens } from '../api/client'
 import { useTheme } from '../contexts/ThemeContext'
 import Logo from './Logo'
+import LogOutIcon from './LogOutIcon'
 import NotificationBell from './NotificationBell'
 
 /** Top header bar with branding and session controls. */
@@ -58,9 +59,11 @@ export default function Header() {
             clearTokens()
             navigate('/login')
           }}
-          className="rounded bg-panel-2 px-3 py-1.5 text-sm hover:bg-panel-3"
+          aria-label={t('actions.logout')}
+          title={t('actions.logout')}
+          className="rounded bg-panel-2 p-1.5 hover:bg-panel-3"
         >
-          {t('actions.logout')}
+          <LogOutIcon className="h-5 w-5" />
         </button>
       </div>
     </header>

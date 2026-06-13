@@ -1,6 +1,6 @@
-// App.tsx — application shell: left sidebar navigation, top page header,
-// route table, and the auth guard that redirects logged-out visitors to the
-// login page.
+// App.tsx — application shell: a full-width top page header, a left sidebar
+// navigation below it, route table, and the auth guard that redirects
+// logged-out visitors to the login page.
 
 import type { ReactElement } from 'react'
 import { useEffect } from 'react'
@@ -66,7 +66,7 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
   }`
 }
 
-/** Route table for the app, with a left sidebar and top page header. */
+/** Route table for the app, with a full-width top header and a left sidebar below it. */
 export default function App() {
   const navigate = useNavigate()
 
@@ -80,86 +80,88 @@ export default function App() {
   }, [navigate])
 
   return (
-    <div className="flex min-h-screen">
-      <SideBar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/onboarding"
-            element={
-              <RequireAuth>
-                <OnboardingPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <PortfoliosPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/recommendations"
-            element={
-              <RequireAuth>
-                <RecommendationsPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/strategies"
-            element={
-              <RequireAuth>
-                <StrategyLabPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/topics"
-            element={
-              <RequireAuth>
-                <TopicsPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <RequireAuth>
-                <SettingsPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/universe"
-            element={
-              <RequireAuth>
-                <UniversePage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/scores"
-            element={
-              <RequireAuth>
-                <ScoresPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/stocks/:symbol"
-            element={
-              <RequireAuth>
-                <StockDetailPage />
-              </RequireAuth>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <div className="flex min-w-0 flex-1">
+        <SideBar />
+        <div className="min-w-0 flex-1">
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/onboarding"
+              element={
+                <RequireAuth>
+                  <OnboardingPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <PortfoliosPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/recommendations"
+              element={
+                <RequireAuth>
+                  <RecommendationsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/strategies"
+              element={
+                <RequireAuth>
+                  <StrategyLabPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/topics"
+              element={
+                <RequireAuth>
+                  <TopicsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <RequireAuth>
+                  <SettingsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/universe"
+              element={
+                <RequireAuth>
+                  <UniversePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/scores"
+              element={
+                <RequireAuth>
+                  <ScoresPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/stocks/:symbol"
+              element={
+                <RequireAuth>
+                  <StockDetailPage />
+                </RequireAuth>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </div>
     </div>
   )

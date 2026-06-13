@@ -15,7 +15,8 @@
       "Bash(ls *)",
       "Bash(curl -s http://localhost:5173 *)",
       "Skill(run)",
-      "Skill(run:*)"
+      "Skill(run:*)",
+      "Bash(netstat *)"
     ]
   }
 }
