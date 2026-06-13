@@ -23,7 +23,22 @@
     "suits": "suits {{riskFit}}",
     "latestTestSharpe": "latest test Sharpe",
     "notEvaluated": "Not evaluated yet.",
-    "run": "Run {{date}} — test Sharpe {{value}}"
+    "run": "Run {{date}} — test Sharpe {{value}}",
+    "runCandidate": "Run {{date}} — candidate #{{rank}} — test Sharpe {{value}}"
+  },
+  "evolved": {
+    "populationSize": "Population size",
+    "generations": "Generations",
+    "maxSymbols": "Max symbols",
+    "riskWeight": "Risk weight",
+    "build": "Build strategy",
+    "building": "Evolving (gen {{current}}/{{total}})…",
+    "fitnessChart": "Best and average fitness per generation",
+    "weights": "Signal weights (rank #1 candidate)",
+    "entryThreshold": "Entry threshold",
+    "exitThreshold": "Exit threshold",
+    "failed": "Evolution failed: {{error}}",
+    "neverRun": "Not evolved yet — run the genetic algorithm to fit a gene."
   },
   "info": {
     "toggleLabel": "About this strategy",
@@ -44,6 +59,10 @@
       "balanced": {
         "explanation": "A balanced blend combines trend and momentum signals with gentler thresholds, aiming for steadier, lower-volatility entries and exits.",
         "link": "https://en.wikipedia.org/wiki/Technical_analysis"
+      },
+      "evolved": {
+        "explanation": "A genetic algorithm evolves a composite rule by combining several existing indicator signals with weights and entry/exit thresholds, selecting for risk-adjusted returns over many generations.",
+        "link": "https://en.wikipedia.org/wiki/Genetic_algorithm"
       }
     }
   },

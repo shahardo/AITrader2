@@ -4,22 +4,8 @@
 
 import pandas as pd
 
-from app.strategy.base import Decision, TradingStrategy
-
-
-def _val(features: pd.DataFrame, day: int, col: str) -> float:
-    """Read one feature value, mapping NaN to 0.0.
-
-    Args:
-        features: Feature frame.
-        day: Positional bar index.
-        col: Column name.
-
-    Returns:
-        float: The value, or 0.0 when missing/NaN.
-    """
-    v = features[col].iloc[day]
-    return 0.0 if pd.isna(v) else float(v)
+from app.strategy.base import Decision, TradingStrategy, _val
+from app.strategy.evolved import EvolvedStrategy
 
 
 class MomentumStrategy(TradingStrategy):
@@ -153,7 +139,7 @@ class BalancedStrategy(TradingStrategy):
 STRATEGY_REGISTRY: dict[str, type[TradingStrategy]] = {
     cls.kind: cls
     for cls in (MomentumStrategy, MeanReversionStrategy, TrendFollowingStrategy,
-                BalancedStrategy)
+                BalancedStrategy, EvolvedStrategy)
 }
 
 

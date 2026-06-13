@@ -17,6 +17,7 @@ from app.models.strategy import (
     PortfolioModel,
     Recommendation,
     Strategy,
+    StrategyEvolutionRun,
     StrategyRun,
     TradeModel,
 )
@@ -29,6 +30,7 @@ __all__ = [
     "Scan",
     "Strategy",
     "StrategyRun",
+    "StrategyEvolutionRun",
     "BacktestTrade",
     "PortfolioModel",
     "Holding",

@@ -119,6 +119,27 @@ class StrategyRunOut(BaseModel):
     test_metrics: dict
     equity_curve: list
     status: str
+    rank: int
+
+    model_config = {"from_attributes": True}
+
+
+class StrategyEvolutionRunOut(BaseModel):
+    """One genetic-algorithm run that evolves the 'evolved' strategy's gene."""
+
+    id: int
+    status: str
+    triggered_by: str
+    population_size: int
+    generations: int
+    current_generation: int
+    risk_weight: float
+    max_symbols: int
+    fitness_history: list
+    strategy_run_id: int | None
+    error_message: str | None
+    started_at: datetime
+    completed_at: datetime | None
 
     model_config = {"from_attributes": True}
 

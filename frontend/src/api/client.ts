@@ -335,6 +335,30 @@ export interface StrategyRunOut {
   test_metrics: Record<string, number>
   equity_curve: [string, number][]
   status: string
+  rank: number
+}
+
+export interface StrategyEvolutionRunOut {
+  id: number
+  status: 'pending' | 'running' | 'done' | 'failed'
+  triggered_by: string
+  population_size: number
+  generations: number
+  current_generation: number
+  risk_weight: number
+  max_symbols: number
+  fitness_history: { generation: number; best: number; avg: number }[]
+  strategy_run_id: number | null
+  error_message: string | null
+  started_at: string
+  completed_at: string | null
+}
+
+export interface EvolveOptions {
+  population_size?: number
+  generations?: number
+  risk_weight?: number
+  max_symbols?: number
 }
 
 export interface BacktestTradeOut {
@@ -438,6 +462,24 @@ export function evaluateStrategies(maxSymbols = 60): Promise<StrategyRunOut[]> {
     method: 'POST',
     body: JSON.stringify({ max_symbols: maxSymbols }),
   })
+}
+
+/** Start a genetic-algorithm run that evolves the "evolved" strategy's gene. */
+export function evolveStrategy(options: EvolveOptions = {}): Promise<StrategyEvolutionRunOut> {
+  return request<StrategyEvolutionRunOut>('/strategies/evolve', {
+    method: 'POST',
+    body: JSON.stringify(options),
+  })
+}
+
+/** Poll one evolution run's status and progress. */
+export function getEvolutionRun(id: number): Promise<StrategyEvolutionRunOut> {
+  return request<StrategyEvolutionRunOut>(`/strategy-evolution-runs/${id}`)
+}
+
+/** List evolution runs, newest first (for resuming polling after a reload). */
+export function listEvolutionRuns(): Promise<StrategyEvolutionRunOut[]> {
+  return request<StrategyEvolutionRunOut[]>('/strategy-evolution-runs')
 }
 
 export interface TopicOut {
