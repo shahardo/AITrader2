@@ -1,7 +1,8 @@
-# test_universe.py — tests for constituent parsing/fallbacks and universe upserts.
+# test_universe.py — tests for constituent parsing/fallbacks, universe upserts, and
+# the screener-based discovery layer.
 
 from app.models.instrument import Exchange, Instrument, UniverseSource
-from app.universe import constituents
+from app.universe import constituents, discovery
 from app.universe.constituents import ConstituentEntry, normalize_us_symbol
 from app.universe.loader import upsert_universe
 
@@ -56,3 +57,25 @@ def test_upsert_leaves_absent_instruments_untouched(db_session):
     upsert_universe(db_session, [_entry("AAPL"), _entry("MSFT")])
     upsert_universe(db_session, [_entry("AAPL")])
     assert db_session.query(Instrument).count() == 2
+
+
+def test_discovery_adds_new_symbols_and_reports_progress(db_session, monkeypatch):
+    monkeypatch.setattr(discovery, "fetch_screener_symbols",
+                        lambda: {"AAPL": "Apple Inc.", "ZAPP": "Zapp Inc."})
+    db_session.add(Instrument(symbol="AAPL", name="Apple", exchange=Exchange.us,
+                              universe_source=UniverseSource.sp500))
+    db_session.commit()
+
+    events = []
+    added = discovery.run_discovery(db_session, on_progress=events.append)
+
+    assert added == 1
+    zapp = db_session.query(Instrument).filter_by(symbol="ZAPP").one()
+    assert zapp.universe_source == UniverseSource.discovery
+    assert [e["symbol"] for e in events] == ["AAPL", "ZAPP"]
+    assert all(e["stage"] == "discovery" and e["total"] == 2 for e in events)
+
+
+def test_discovery_returns_zero_when_screeners_unavailable(db_session, monkeypatch):
+    monkeypatch.setattr(discovery, "fetch_screener_symbols", lambda: {})
+    assert discovery.run_discovery(db_session) == 0

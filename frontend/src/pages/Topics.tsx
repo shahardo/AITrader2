@@ -7,11 +7,13 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  getDeepDiveProgress,
   listHotTopics,
   listTopicReports,
   runDeepDive,
   type TopicReportOut,
 } from '../api/client'
+import ProgressLine from '../components/ProgressLine'
 import Spinner from '../components/Spinner'
 
 /** One deep-dive report rendered with its ranked candidates. */
@@ -75,6 +77,12 @@ export default function TopicsPage() {
     mutationFn: (topic: string) => runDeepDive(topic),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topic-reports'] }),
   })
+  const diveProgress = useQuery({
+    queryKey: ['deep-dive-progress'],
+    queryFn: getDeepDiveProgress,
+    enabled: dive.isPending,
+    refetchInterval: dive.isPending ? 1000 : false,
+  })
 
   return (
     <div className="mx-auto max-w-5xl p-6">
@@ -134,6 +142,7 @@ export default function TopicsPage() {
             {dive.isPending && <Spinner className="h-4 w-4" />}
           </button>
         </form>
+        {dive.isPending && <ProgressLine progress={diveProgress.data?.progress} ns="topics" />}
         {dive.error && (
           <p role="alert" className="mt-2 text-sm text-negative">
             {t('errors.deepDiveFailed')}
@@ -141,15 +150,17 @@ export default function TopicsPage() {
         )}
       </section>
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">{t('reports.heading')}</h2>
-        {reports.data && reports.data.length === 0 && (
-          <p className="text-ink-3">{t('reports.empty')}</p>
-        )}
-        <div className="space-y-4">
-          {reports.data?.map((r) => <Report key={r.id} report={r} />)}
-        </div>
-      </section>
+      {!dive.isPending && (
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">{t('reports.heading')}</h2>
+          {reports.data && reports.data.length === 0 && (
+            <p className="text-ink-3">{t('reports.empty')}</p>
+          )}
+          <div className="space-y-4">
+            {reports.data?.map((r) => <Report key={r.id} report={r} />)}
+          </div>
+        </section>
+      )}
       <p className="mt-6 text-xs text-ink-5">{t('common:disclaimerShort')}</p>
     </div>
   )

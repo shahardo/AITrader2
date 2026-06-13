@@ -90,3 +90,21 @@ def test_symbol_with_no_data_is_skipped_not_fatal(db_session):
     inserted = sync_price_history(db_session, provider, [good, bad], history_days=10, today=today)
 
     assert inserted == {"AAPL": 3}
+
+
+def test_sync_reports_progress_per_symbol(db_session):
+    today = date(2026, 6, 10)
+    aapl = _instrument(db_session, "AAPL")
+    msft = _instrument(db_session, "MSFT")
+    provider = FakeProvider({
+        "AAPL": _bars("AAPL", today - timedelta(days=2), 3),
+        "MSFT": _bars("MSFT", today - timedelta(days=2), 3),
+    })
+
+    events = []
+    sync_price_history(db_session, provider, [aapl, msft], history_days=10, today=today,
+                       on_progress=events.append)
+
+    assert {e["symbol"] for e in events} == {"AAPL", "MSFT"}
+    assert all(e["stage"] == "syncing_prices" and e["total"] == 2 for e in events)
+    assert [e["current"] for e in events] == [1, 2]

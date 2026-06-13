@@ -1,15 +1,16 @@
 # test_product.py — tests for Milestone 4: notifications (+Telegram mirroring),
 # Telegram account linking, the topic radar, deep dives with hallucinated-ticker
-# rejection, and scan/notification API endpoints.
+# rejection, scan/notification API endpoints, and live progress reporting.
 
 import json
 from datetime import UTC, datetime, timedelta
 
+from app.core.progress import set_progress
 from app.llm.provider import LLMProvider, LLMResult, LLMUnavailable
 from app.marketdata.provider import Bar, MarketDataProvider
 from app.models.analysis import SentimentItem
 from app.models.instrument import Exchange, Instrument, UniverseSource
-from app.models.product import Notification, Topic
+from app.models.product import Notification, Scan, Topic
 from app.models.user import User
 from app.notify import service as notify_service
 from app.notify.service import complete_telegram_links, notify
@@ -167,3 +168,65 @@ def test_hot_topics_endpoint_lists_by_buzz(client, auth_headers, db_session):
     db_session.commit()
     rows = client.get("/api/v1/topics/hot", headers=auth_headers).json()
     assert [r["name"] for r in rows] == ["B", "A"]
+
+
+def test_deep_dive_reports_progress_through_callback(db_session):
+    known = Instrument(symbol="IONQ", name="IonQ", exchange=Exchange.us,
+                       universe_source=UniverseSource.discovery)
+    db_session.add(known)
+    db_session.commit()
+    llm = FakeLLM({"topics.deep_dive": {
+        "summary": "Quantum hardware and software plays.",
+        "candidates": [
+            {"symbol": "IONQ", "name": "IonQ", "rationale": "Pure-play quantum."},
+            {"symbol": "FAKEQ", "name": "Hallucinated Inc", "rationale": "Does not exist."},
+        ]}})
+    provider = FakeMarketData(real_symbols=set())
+
+    events = []
+    run_deep_dive(db_session, llm, provider, "Quantum computing", analyze=False,
+                  on_progress=events.append)
+
+    assert events[0] == {"stage": "searching", "topic": "Quantum computing"}
+    validating = [e for e in events if e["stage"] == "validating"]
+    assert [e["symbol"] for e in validating] == ["IONQ", "FAKEQ"]
+    assert all(e["total"] == 2 for e in validating)
+
+
+def test_deep_dive_progress_endpoint_reflects_in_flight_status(client, auth_headers):
+    me = client.get("/api/v1/me", headers=auth_headers).json()
+    set_progress(f"deepdive:{me['id']}", {"stage": "reading_article", "symbol": "IONQ",
+                                          "current": 2, "total": 5})
+
+    resp = client.get("/api/v1/topics/deep-dive/progress", headers=auth_headers)
+    assert resp.json() == {"progress": {"stage": "reading_article", "symbol": "IONQ",
+                                        "current": 2, "total": 5}}
+    set_progress(f"deepdive:{me['id']}", None)
+
+
+def test_deep_dive_progress_endpoint_none_when_idle(client, auth_headers):
+    resp = client.get("/api/v1/topics/deep-dive/progress", headers=auth_headers)
+    assert resp.json() == {"progress": None}
+
+
+def test_latest_scan_includes_progress_when_running(client, auth_headers, db_session):
+    scan = Scan(status="running")
+    db_session.add(scan)
+    db_session.commit()
+    set_progress(f"scan:{scan.id}", {"stage": "discovery", "symbol": "TSLA",
+                                     "current": 3, "total": 10})
+
+    resp = client.get("/api/v1/scans/latest", headers=auth_headers).json()
+    assert resp["status"] == "running"
+    assert resp["progress"] == {"stage": "discovery", "symbol": "TSLA",
+                                "current": 3, "total": 10}
+
+
+def test_latest_scan_omits_progress_when_done(client, auth_headers, db_session):
+    scan = Scan(status="done", finished_at=datetime.now(UTC))
+    db_session.add(scan)
+    db_session.commit()
+
+    resp = client.get("/api/v1/scans/latest", headers=auth_headers).json()
+    assert resp["status"] == "done"
+    assert resp["progress"] is None

@@ -36,7 +36,12 @@
     "lastScan": "סריקה אחרונה: {{status}} · {{stats}}",
     "rerun": "הרץ סריקת יקום מחדש",
     "scanning": "סורק…",
-    "error": "הסריקה נכשלה — בדקו את לוגי ה-API"
+    "error": "הסריקה נכשלה — בדקו את לוגי ה-API",
+    "progress": {
+      "loading_universe": "טוען מחדש את מרכיבי המדדים…",
+      "discovery": "מחפש רישומים חדשים: {{symbol}} ({{current}}/{{total}})",
+      "syncing_prices": "מסנכרן היסטוריית מחירים: {{symbol}} ({{current}}/{{total}})"
+    }
   },
   "dangerZone": {
     "heading": "אזור מסוכן",

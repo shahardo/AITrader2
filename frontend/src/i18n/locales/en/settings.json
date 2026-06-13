@@ -36,7 +36,12 @@
     "lastScan": "Last scan: {{status}} · {{stats}}",
     "rerun": "Re-run universe scan",
     "scanning": "Scanning…",
-    "error": "Scan failed — check API logs"
+    "error": "Scan failed — check API logs",
+    "progress": {
+      "loading_universe": "Reloading index constituents…",
+      "discovery": "Scanning for new listings: {{symbol}} ({{current}}/{{total}})",
+      "syncing_prices": "Syncing price history: {{symbol}} ({{current}}/{{total}})"
+    }
   },
   "dangerZone": {
     "heading": "Danger zone",

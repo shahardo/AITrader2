@@ -4,6 +4,7 @@
 # tickers are dropped), pulls their history, analyzes them, and ranks the result.
 
 import logging
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
@@ -82,7 +83,9 @@ def refresh_topic_radar(db: Session, llm: LLMProvider, max_titles: int = 120) ->
 
 
 def _validate_candidates(db: Session, provider: MarketDataProvider,
-                         raw: list[dict]) -> list[tuple[dict, Instrument]]:
+                         raw: list[dict],
+                         on_progress: Callable[[dict], None] | None = None,
+                         ) -> list[tuple[dict, Instrument]]:
     """Keep only candidates whose tickers resolve to real, priceable listings.
 
     Known instruments validate against the DB; unknown tickers must return real
@@ -93,14 +96,19 @@ def _validate_candidates(db: Session, provider: MarketDataProvider,
         db: Database session (flushed).
         provider: Market data provider for unknown-ticker validation.
         raw: LLM candidates [{symbol, name, rationale}].
+        on_progress: Optional callback invoked with a status payload as each
+            candidate is validated.
 
     Returns:
         list[tuple[dict, Instrument]]: (candidate, instrument) for valid tickers.
     """
     valid: list[tuple[dict, Instrument]] = []
     unknown: dict[str, dict] = {}
-    for cand in raw:
+    total = len(raw)
+    for i, cand in enumerate(raw, start=1):
         symbol = str(cand.get("symbol", "")).strip().upper()
+        if on_progress:
+            on_progress({"stage": "validating", "symbol": symbol, "current": i, "total": total})
         if not symbol or len(symbol) > 12:
             continue
         cand["symbol"] = symbol
@@ -131,7 +139,8 @@ def _validate_candidates(db: Session, provider: MarketDataProvider,
 
 def run_deep_dive(db: Session, llm: LLMProvider, provider: MarketDataProvider,
                   topic_name: str, user: User | None = None,
-                  analyze: bool = True) -> TopicReport:
+                  analyze: bool = True,
+                  on_progress: Callable[[dict], None] | None = None) -> TopicReport:
     """Execute a topic deep dive end to end.
 
     Args:
@@ -141,6 +150,8 @@ def run_deep_dive(db: Session, llm: LLMProvider, provider: MarketDataProvider,
         topic_name: Theme to investigate (listed or free text).
         user: Requesting user (for the report attribution).
         analyze: Run the analysis pass on validated candidates (slower).
+        on_progress: Optional callback invoked with a status payload as the
+            deep dive progresses (searching, validating, analyzing).
 
     Returns:
         TopicReport: Persisted report with ranked validated candidates.
@@ -148,6 +159,9 @@ def run_deep_dive(db: Session, llm: LLMProvider, provider: MarketDataProvider,
     Raises:
         LLMUnavailable: When the LLM is down (deep dives need it).
     """
+    if on_progress:
+        on_progress({"stage": "searching", "topic": topic_name})
+
     topic = db.scalar(select(Topic).where(Topic.name.ilike(topic_name)))
     if topic is None:
         topic = Topic(name=topic_name[:200], status="user_requested")
@@ -157,7 +171,8 @@ def run_deep_dive(db: Session, llm: LLMProvider, provider: MarketDataProvider,
     result = llm.complete("topics.deep_dive", DEEP_DIVE_SYSTEM,
                           f"Theme: {topic.name}", tier=ModelTier.deep, max_tokens=2000)
     parsed = result.parsed or {}
-    candidates = _validate_candidates(db, provider, list(parsed.get("candidates", []))[:15])
+    candidates = _validate_candidates(db, provider, list(parsed.get("candidates", []))[:15],
+                                      on_progress=on_progress)
 
     instruments = [inst for _, inst in candidates]
     scores: dict[int, float] = {}
@@ -166,7 +181,7 @@ def run_deep_dive(db: Session, llm: LLMProvider, provider: MarketDataProvider,
         from app.sentiment.sources import default_sources
 
         sync_price_history(db, provider, instruments)
-        run_analysis(db, llm, default_sources(), instruments)
+        run_analysis(db, llm, default_sources(), instruments, on_progress=on_progress)
         for inst in instruments:
             row = db.scalar(select(StockScore).where(StockScore.instrument_id == inst.id)
                             .order_by(StockScore.date.desc()).limit(1))

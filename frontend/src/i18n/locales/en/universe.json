@@ -7,7 +7,8 @@
   },
   "filters": {
     "clear": "Clear",
-    "noSector": "No sector"
+    "noSector": "No sector",
+    "noRecommendation": "No data"
   },
   "loading": "Loading universe…",
   "error": "Failed to load instruments",

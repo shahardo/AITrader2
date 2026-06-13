@@ -3,6 +3,7 @@
 # so lesser-known names with unusual volume/momentum enter the universe.
 
 import logging
+from collections.abc import Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -38,11 +39,13 @@ def fetch_screener_symbols() -> dict[str, str]:
     return found
 
 
-def run_discovery(db: Session) -> int:
+def run_discovery(db: Session, on_progress: Callable[[dict], None] | None = None) -> int:
     """Add screener discoveries to the universe with source="discovery".
 
     Args:
         db: Database session (committed).
+        on_progress: Optional callback invoked with a status payload as each
+            screener symbol is considered.
 
     Returns:
         int: Number of newly added instruments.
@@ -52,7 +55,10 @@ def run_discovery(db: Session) -> int:
         return 0
     existing = {s for (s,) in db.execute(select(Instrument.symbol))}
     added = 0
-    for symbol, name in symbols.items():
+    total = len(symbols)
+    for i, (symbol, name) in enumerate(symbols.items(), start=1):
+        if on_progress:
+            on_progress({"stage": "discovery", "symbol": symbol, "current": i, "total": total})
         if symbol in existing:
             continue
         db.add(Instrument(symbol=symbol, name=name[:255], exchange=Exchange.us,

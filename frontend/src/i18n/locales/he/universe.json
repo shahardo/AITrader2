@@ -7,7 +7,8 @@
   },
   "filters": {
     "clear": "ניקוי",
-    "noSector": "אין סקטור"
+    "noSector": "אין סקטור",
+    "noRecommendation": "אין נתונים"
   },
   "loading": "טוען יקום…",
   "error": "טעינת המכשירים נכשלה",

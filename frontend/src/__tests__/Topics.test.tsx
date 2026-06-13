@@ -1,5 +1,6 @@
 // Topics.test.tsx — tests for the topics page: hot-topic chips, free-text deep
-// dive calling the API, and report rendering with ranked candidates.
+// dive calling the API, report rendering with ranked candidates, and the
+// in-flight deep-dive progress line / report reset.
 
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -20,11 +21,16 @@ const REPORTS = [
         validated: true },
     ] },
 ]
+const DIVE_PROGRESS = { progress: { stage: 'reading_article', symbol: 'IONQ', current: 2, total: 5 } }
 
-function mockApi() {
+function mockApi({ divePromise }: { divePromise?: Promise<void> } = {}) {
   const mock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
-    if (url.includes('/topics/deep-dive') && init?.method === 'POST')
-      return Promise.resolve(new Response(JSON.stringify(REPORTS[0]), { status: 200 }))
+    if (url.includes('/topics/deep-dive/progress'))
+      return Promise.resolve(new Response(JSON.stringify(DIVE_PROGRESS), { status: 200 }))
+    if (url.includes('/topics/deep-dive') && init?.method === 'POST') {
+      const respond = () => new Response(JSON.stringify(REPORTS[0]), { status: 200 })
+      return divePromise ? divePromise.then(respond) : Promise.resolve(respond())
+    }
     if (url.includes('/topic-reports'))
       return Promise.resolve(new Response(JSON.stringify(REPORTS), { status: 200 }))
     if (url.includes('/topics/hot'))
@@ -67,5 +73,23 @@ describe('TopicsPage', () => {
       expect(call).toBeTruthy()
       expect(JSON.parse((call![1] as RequestInit).body as string).topic).toBe('nuclear fusion')
     })
+  })
+
+  it('hides previous reports and shows live progress while diving, then restores them', async () => {
+    let resolveDive: () => void = () => {}
+    const divePromise = new Promise<void>((resolve) => { resolveDive = resolve })
+    mockApi({ divePromise })
+    renderPage()
+    await screen.findByText('IONQ')
+
+    await userEvent.type(screen.getByPlaceholderText(/any theme/i), 'nuclear fusion')
+    await userEvent.click(screen.getByRole('button', { name: /^deep dive$/i }))
+
+    await waitFor(() => expect(screen.queryByText('IONQ')).not.toBeInTheDocument())
+    expect(await screen.findByText(/reading article for ionq \(2\/5\)/i)).toBeInTheDocument()
+
+    resolveDive()
+    await waitFor(() => expect(screen.getByText('IONQ')).toBeInTheDocument())
+    expect(screen.queryByText(/reading article for ionq/i)).not.toBeInTheDocument()
   })
 })

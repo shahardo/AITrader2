@@ -476,12 +476,21 @@ export interface NotificationOut {
   created_at: string
 }
 
+export interface ProgressInfo {
+  stage: string
+  symbol?: string
+  topic?: string
+  current?: number
+  total?: number
+}
+
 export interface ScanOut {
   id: number
   status: string
   stats: Record<string, number>
   started_at: string
   finished_at: string | null
+  progress?: ProgressInfo | null
 }
 
 /** List hot topics; refresh=true re-runs the LLM radar first. */
@@ -500,6 +509,11 @@ export function runDeepDive(topic: string, analyze = true): Promise<TopicReportO
 /** List recent deep-dive reports. */
 export function listTopicReports(): Promise<TopicReportOut[]> {
   return request<TopicReportOut[]>('/topic-reports')
+}
+
+/** Poll the current user's in-flight deep-dive status, if any. */
+export function getDeepDiveProgress(): Promise<{ progress: ProgressInfo | null }> {
+  return request<{ progress: ProgressInfo | null }>('/topics/deep-dive/progress')
 }
 
 /** List the user's notifications. */

@@ -140,6 +140,26 @@ gainers / most actives / small-cap gainers) during on-demand scans
 fetches and persists these onto `Instrument` on first view (`profile_fetched_at` marks the
 attempt, success or not, so it's never repeated) for the stock detail page's company info card.
 
+### Live progress reporting (`app/core/progress.py`, `app/api/product.py`)
+
+Long-running synchronous endpoints (`POST /scans`, `POST /topics/deep-dive`) report live
+status via an in-process, thread-safe `dict[str, dict]` keyed by `f"scan:{scan.id}"` /
+`f"deepdive:{user.id}"` (`set_progress`/`get_progress`). This relies on uvicorn running sync
+`def` endpoints in a threadpool, so a polling request executes concurrently with the
+in-flight one — no Celery/Redis needed. Service-layer loops
+(`universe.discovery.run_discovery`, `marketdata.service.sync_price_history`,
+`analysis.service.run_analysis`/`analyze_sentiment`,
+`topics.service._validate_candidates`/`run_deep_dive`) accept an optional trailing
+`on_progress: Callable[[dict], None] | None = None` invoked with `{"stage": ..., "symbol"?,
+"topic"?, "current"?, "total"?}` payloads as each item is processed. `GET /scans/latest`
+includes a `progress` field while `status == "running"`; `GET /topics/deep-dive/progress`
+returns the requesting user's in-flight deep-dive status (`null` when idle). On the frontend,
+`components/ProgressLine.tsx` renders these payloads via `<namespace>.progress.<stage>` (or a
+custom `keyPrefix`) i18n keys — used by the Settings universe-rescan section and the Topics
+deep-dive form, both polling their progress endpoint at 1s while the corresponding
+mutation/scan is in flight. Starting a new Topics deep dive hides the reports list until the
+new report is ready.
+
 ### Frontend (`frontend/src/`)
 
 React 19 + Vite + TanStack Query + Tailwind v4 + react-router-dom v7. `api/client.ts` is a
@@ -152,9 +172,13 @@ redirects to `/login` when no tokens are stored. Pages map ~1:1 to backend domai
 Login, Onboarding). Charts use `lightweight-charts` (`CandleChart` — candles +
 trend channel + S/R overlays) and a custom `LineCompareChart` for normalized equity-curve
 comparisons. Shared components include `MultiSelectFilter` (checkbox-dropdown column filter,
-used by Universe's Exchange/Sector columns) and `CompanyLogo` (Clearbit → Google favicon →
+used by Universe's Exchange/Sector/Recommendation columns), `ProgressLine` (live-status line
+for in-flight scans/deep-dives, see above), and `CompanyLogo` (Clearbit → Google favicon →
 initials fallback chain for the stock detail company card; pass `key={website}` so callers
-reset the fallback index on a company change).
+reset the fallback index on a company change). The Universe table has a sticky
+title/search/header (only the row list scrolls) and sortable columns (symbol, name,
+exchange, sector, last close, recommendation) via clickable `<th>`s with an ascending/
+descending `SortArrow`.
 
 ### Theming, i18n & RTL (`frontend/src/index.css`, `contexts/ThemeContext.tsx`, `i18n/`)
 

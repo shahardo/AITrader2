@@ -1,9 +1,9 @@
 // Universe.test.tsx — tests for the universe browser: renders instrument rows
-// with price-change indicators, shows the empty state, and supports
-// multi-select filtering by exchange and sector.
+// with price-change indicators, shows the empty state, supports multi-select
+// filtering by exchange, sector and recommendation, and sorting by column.
 
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -170,5 +170,74 @@ describe('UniversePage', () => {
     const tevaRow = screen.getByText('TEVA.TA').closest('tr')
     expect(tevaRow).not.toBeNull()
     expect(tevaRow!.lastElementChild?.textContent).toBe('—')
+  })
+
+  it('filters by recommendation using the multi-select column filter', async () => {
+    stubFetch(ROWS, SCORES)
+    renderUniverse()
+    await screen.findByText('BUY')
+
+    await userEvent.click(screen.getByRole('button', { name: /recommendation/i }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'BUY' }))
+
+    expect(screen.getByText('AAPL')).toBeInTheDocument()
+    expect(screen.queryByText('MSFT')).not.toBeInTheDocument()
+    expect(screen.queryByText('TEVA.TA')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'No data' }))
+    expect(screen.getByText('TEVA.TA')).toBeInTheDocument()
+    expect(screen.queryByText('MSFT')).not.toBeInTheDocument()
+  })
+
+  it('sorts by symbol ascending then descending when the header is clicked', async () => {
+    stubFetch(ROWS)
+    renderUniverse()
+    await screen.findByText('AAPL')
+
+    await userEvent.click(screen.getByRole('columnheader', { name: /symbol/i }))
+    expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual([
+      'AAPL', 'MSFT', 'TEVA.TA',
+    ])
+
+    await userEvent.click(screen.getByRole('columnheader', { name: /symbol/i }))
+    expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual([
+      'TEVA.TA', 'MSFT', 'AAPL',
+    ])
+  })
+
+  it('sorts by last close, with unscored instruments first ascending', async () => {
+    stubFetch(ROWS)
+    renderUniverse()
+    await screen.findByText('AAPL')
+
+    await userEvent.click(screen.getByRole('columnheader', { name: /last close/i }))
+    expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual([
+      'TEVA.TA', 'MSFT', 'AAPL',
+    ])
+
+    await userEvent.click(screen.getByRole('columnheader', { name: /last close/i }))
+    expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual([
+      'AAPL', 'MSFT', 'TEVA.TA',
+    ])
+  })
+
+  it('sorts by recommendation score', async () => {
+    stubFetch(ROWS, SCORES)
+    renderUniverse()
+    await screen.findByText('BUY')
+
+    await userEvent.click(screen.getByRole('columnheader', { name: /recommendation/i }))
+    await waitFor(() => {
+      expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual([
+        'TEVA.TA', 'MSFT', 'AAPL',
+      ])
+    })
+
+    await userEvent.click(screen.getByRole('columnheader', { name: /recommendation/i }))
+    await waitFor(() => {
+      expect(screen.getAllByRole('link').map((el) => el.textContent)).toEqual([
+        'AAPL', 'MSFT', 'TEVA.TA',
+      ])
+    })
   })
 })

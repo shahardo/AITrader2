@@ -45,6 +45,19 @@ def test_run_analysis_persists_snapshots_and_ranks(db_session):
     assert ranked[up.id] == 1 and ranked[down.id] == 2
 
 
+def test_run_analysis_reports_progress_per_instrument(db_session):
+    up = _seed_instrument(db_session, "UPUP", drift=0.4)
+    down = _seed_instrument(db_session, "DOWN", drift=-0.4)
+
+    events = []
+    run_analysis(db_session, NullLLMProvider(), [], [up, down],
+                 as_of=date(2026, 6, 10), with_sentiment=False, on_progress=events.append)
+
+    assert [e["symbol"] for e in events] == ["UPUP", "DOWN"]
+    assert all(e["stage"] == "analyzing" and e["total"] == 2 for e in events)
+    assert [e["current"] for e in events] == [1, 2]
+
+
 def test_run_analysis_skips_thin_history(db_session):
     thin = _seed_instrument(db_session, "THIN", drift=0.1, n=20)
     scores = run_analysis(db_session, NullLLMProvider(), [], [thin], with_sentiment=False)

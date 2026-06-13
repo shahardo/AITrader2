@@ -86,6 +86,14 @@ Milestones 1-2 are implemented:
   Universe, Scores, Topics, Settings, stock detail) gets its own accent hue across both themes
 - Hebrew translation with full RTL layout support, alongside English; switchable from the
   page header and persisted per browser
+- Universe browser: sortable columns (symbol, name, exchange, sector, last close,
+  recommendation) with ascending/descending toggle, a multi-select recommendation filter, and
+  a sticky title/search/header while only the row list scrolls
+- Live progress status lines for long-running operations, backed by an in-process progress
+  registry (`app/core/progress.py`) polled by the frontend: the Settings universe re-scan
+  shows e.g. "Scanning for new listings: TSLA (3/10)", and Topics deep dives show e.g.
+  "Reading article for AAPL (3/12)"; starting a new deep dive clears any previously shown
+  report until the new one is ready
 
 ## Operations runbook
 

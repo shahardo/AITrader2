@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.db import get_db
+from app.core.progress import get_progress, set_progress
 from app.llm.groq_provider import build_default_provider
 from app.llm.provider import LLMUnavailable
 from app.marketdata.service import sync_price_history
@@ -81,6 +82,7 @@ class ScanOut(BaseModel):
     stats: dict
     started_at: datetime
     finished_at: datetime | None
+    progress: dict | None = None
 
     model_config = {"from_attributes": True}
 
@@ -99,16 +101,26 @@ def hot_topics(refresh: bool = False, db: Session = Depends(get_db),
 def deep_dive(payload: DeepDiveRequest, db: Session = Depends(get_db),
               user: User = Depends(get_current_user)) -> TopicReportOut:
     """Run a deep dive on a listed or free-text topic (synchronous)."""
+    progress_key = f"deepdive:{user.id}"
     try:
         report = run_deep_dive(db, build_default_provider(), YFinanceProvider(),
-                               payload.topic, user, analyze=payload.analyze)
+                               payload.topic, user, analyze=payload.analyze,
+                               on_progress=lambda data: set_progress(progress_key, data))
     except LLMUnavailable as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
                             "Deep dives require the LLM (set GROQ_API_KEY)") from exc
+    finally:
+        set_progress(progress_key, None)
     out = TopicReportOut.model_validate(report)
     topic = db.get(Topic, report.topic_id)
     out.topic_name = topic.name if topic else ""
     return out
+
+
+@router.get("/topics/deep-dive/progress")
+def deep_dive_progress(user: User = Depends(get_current_user)) -> dict:
+    """Return the current user's in-flight deep-dive status, if any."""
+    return {"progress": get_progress(f"deepdive:{user.id}")}
 
 
 @router.get("/topic-reports", response_model=list[TopicReportOut])
@@ -175,12 +187,19 @@ def trigger_scan(db: Session = Depends(get_db), user: User = Depends(get_current
     scan = Scan(triggered_by=user.id)
     db.add(scan)
     db.commit()
+    progress_key = f"scan:{scan.id}"
+
+    def on_progress(data: dict) -> None:
+        set_progress(progress_key, data)
+
     try:
+        on_progress({"stage": "loading_universe"})
         counts = upsert_universe(db, fetch_base_universe())
-        discovered = run_discovery(db)
+        discovered = run_discovery(db, on_progress=on_progress)
         new_instruments = list(db.scalars(
             select(Instrument).where(Instrument.is_active.is_(True))))
-        synced = sync_price_history(db, YFinanceProvider(), new_instruments)
+        synced = sync_price_history(db, YFinanceProvider(), new_instruments,
+                                    on_progress=on_progress)
         scan.stats = {**counts, "discovered": discovered,
                       "synced_symbols": len(synced), "bars": sum(synced.values())}
         scan.status = "done"
@@ -188,6 +207,7 @@ def trigger_scan(db: Session = Depends(get_db), user: User = Depends(get_current
         scan.status = "failed"
         raise
     finally:
+        set_progress(progress_key, None)
         scan.finished_at = datetime.now(UTC)
         db.commit()
     return ScanOut.model_validate(scan)
@@ -206,4 +226,9 @@ def latest_scan(db: Session = Depends(get_db), _user=Depends(get_current_user)
                 ) -> ScanOut | None:
     """Return the most recent scan run, if any."""
     row = db.scalar(select(Scan).order_by(Scan.started_at.desc()).limit(1))
-    return ScanOut.model_validate(row) if row else None
+    if row is None:
+        return None
+    out = ScanOut.model_validate(row)
+    if row.status == "running":
+        out.progress = get_progress(f"scan:{row.id}")
+    return out

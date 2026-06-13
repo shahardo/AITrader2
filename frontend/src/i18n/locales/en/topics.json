@@ -27,5 +27,11 @@
       "score": "Score",
       "why": "Why"
     }
+  },
+  "progress": {
+    "searching": "Searching for \"{{topic}}\"…",
+    "validating": "Validating {{symbol}} ({{current}}/{{total}})",
+    "analyzing": "Analyzing {{symbol}} ({{current}}/{{total}})",
+    "reading_article": "Reading article for {{symbol}} ({{current}}/{{total}})"
   }
 }

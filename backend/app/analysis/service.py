@@ -4,6 +4,7 @@
 # (PRD §7).
 
 import logging
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import date
 
@@ -90,6 +91,7 @@ def analyze_sentiment(
     sources: list[SentimentSource],
     instrument: Instrument,
     as_of: date,
+    on_progress: Callable[[dict], None] | None = None,
 ) -> tuple[float, float] | None:
     """Fetch, LLM-score, and persist sentiment for one instrument.
 
@@ -99,23 +101,30 @@ def analyze_sentiment(
         sources: Media channels to query.
         instrument: Instrument to analyze.
         as_of: Score date.
+        on_progress: Optional callback invoked with a status payload as each
+            article is read and scored.
 
     Returns:
         tuple[float, float] | None: (score, confidence), or None when no items
         could be fetched or scored (degradation path).
     """
+    items = [item for source in sources
+             for item in source.fetch(instrument, limit=MAX_ITEMS_PER_SOURCE)]
+    total = len(items)
     scored: list[dict] = []
-    for source in sources:
-        for item in source.fetch(instrument, limit=MAX_ITEMS_PER_SOURCE):
-            rating = score_item(llm, instrument.name, instrument.symbol, item)
-            if rating is None:
-                continue
-            scored.append({**rating, "published_at": item.published_at, "source": item.source})
-            db.add(SentimentItem(
-                instrument_id=instrument.id, source=item.source, url=item.url[:1000],
-                title=item.title[:500], published_at=item.published_at,
-                sentiment=rating["sentiment"], relevance=rating["relevance"],
-                summary=rating["summary"]))
+    for i, item in enumerate(items, start=1):
+        if on_progress:
+            on_progress({"stage": "reading_article", "symbol": instrument.symbol,
+                         "current": i, "total": total})
+        rating = score_item(llm, instrument.name, instrument.symbol, item)
+        if rating is None:
+            continue
+        scored.append({**rating, "published_at": item.published_at, "source": item.source})
+        db.add(SentimentItem(
+            instrument_id=instrument.id, source=item.source, url=item.url[:1000],
+            title=item.title[:500], published_at=item.published_at,
+            sentiment=rating["sentiment"], relevance=rating["relevance"],
+            summary=rating["summary"]))
     if not scored:
         return None
     score, confidence = composite_sentiment(scored)
@@ -166,6 +175,7 @@ def run_analysis(
     instruments: list[Instrument],
     as_of: date | None = None,
     with_sentiment: bool = True,
+    on_progress: Callable[[dict], None] | None = None,
 ) -> dict[str, float]:
     """Run the full analysis pass for a set of instruments and rank them.
 
@@ -176,20 +186,28 @@ def run_analysis(
         instruments: Instruments to analyze.
         as_of: Analysis date (defaults to today).
         with_sentiment: Disable to run technical-only (faster dev runs).
+        on_progress: Optional callback invoked with a status payload as each
+            instrument (and, when enabled, each of its sentiment articles) is
+            processed.
 
     Returns:
         dict[str, float]: Combined score per analyzed symbol.
     """
     as_of = as_of or date.today()
     results: dict[str, float] = {}
-    for instrument in instruments:
+    total = len(instruments)
+    for i, instrument in enumerate(instruments, start=1):
+        if on_progress:
+            on_progress({"stage": "analyzing", "symbol": instrument.symbol,
+                         "current": i, "total": total})
         technical = analyze_technical(db, instrument, as_of)
         if technical is None:
             logger.info("Skipping %s: insufficient history", instrument.symbol)
             continue
         sentiment = None
         if with_sentiment:
-            sentiment = analyze_sentiment(db, llm, sources, instrument, as_of)
+            sentiment = analyze_sentiment(db, llm, sources, instrument, as_of,
+                                          on_progress=on_progress)
         results[instrument.symbol] = blend_and_store(
             db, instrument, as_of, technical, sentiment)
 

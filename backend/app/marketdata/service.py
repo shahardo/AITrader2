@@ -2,6 +2,7 @@
 # missing date ranges per instrument and upserts idempotently.
 
 import logging
+from collections.abc import Callable
 from datetime import date, timedelta
 
 from sqlalchemy import func, select
@@ -22,6 +23,7 @@ def sync_price_history(
     instruments: list[Instrument],
     history_days: int = DEFAULT_HISTORY_DAYS,
     today: date | None = None,
+    on_progress: Callable[[dict], None] | None = None,
 ) -> dict[str, int]:
     """Bring the price_bars cache up to date for the given instruments.
 
@@ -34,6 +36,8 @@ def sync_price_history(
         instruments: Instruments to sync.
         history_days: Backfill window for instruments with no cached bars.
         today: Override for "today" (used by tests); defaults to date.today().
+        on_progress: Optional callback invoked with a status payload as each
+            instrument's bars are synced.
 
     Returns:
         dict[str, int]: Number of bars inserted per symbol.
@@ -58,10 +62,16 @@ def sync_price_history(
         by_start.setdefault(start, []).append(inst)
 
     inserted: dict[str, int] = {}
+    total = sum(len(group) for group in by_start.values())
+    processed = 0
     for start, group in by_start.items():
         symbol_map = {i.symbol: i for i in group}
         fetched = provider.fetch_daily_bars(list(symbol_map), start, today)
         for symbol, bars in fetched.items():
+            processed += 1
+            if on_progress:
+                on_progress({"stage": "syncing_prices", "symbol": symbol,
+                             "current": processed, "total": total})
             inst = symbol_map[symbol]
             count = 0
             for bar in bars:

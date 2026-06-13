@@ -27,5 +27,11 @@
       "score": "ציון",
       "why": "מדוע"
     }
+  },
+  "progress": {
+    "searching": "מחפש את \"{{topic}}\"…",
+    "validating": "מאמת את {{symbol}} ({{current}}/{{total}})",
+    "analyzing": "מנתח את {{symbol}} ({{current}}/{{total}})",
+    "reading_article": "קורא כתבה עבור {{symbol}} ({{current}}/{{total}})"
   }
 }

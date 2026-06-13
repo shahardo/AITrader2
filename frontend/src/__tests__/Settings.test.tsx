@@ -15,7 +15,11 @@ const ME = {
   strategy_switch_mode: 'approve', telegram_linked: false,
 }
 
-function mockApi() {
+function mockApi({
+  scanPromise,
+  scanLatestSequence,
+}: { scanPromise?: Promise<void>; scanLatestSequence?: unknown[] } = {}) {
+  let scanLatestCall = 0
   const mock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
     if (url.endsWith('/me') && init?.method === 'PATCH')
       return Promise.resolve(
@@ -28,14 +32,20 @@ function mockApi() {
         new Response(JSON.stringify({ code: 'ab12cd34', instructions: 'send /start ab12cd34' }),
           { status: 200 }),
       )
-    if (url.endsWith('/scans/latest'))
+    if (url.endsWith('/scans/latest')) {
+      if (scanLatestSequence) {
+        const body = scanLatestSequence[Math.min(scanLatestCall, scanLatestSequence.length - 1)]
+        scanLatestCall++
+        return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
+      }
       return Promise.resolve(new Response('null', { status: 200 }))
-    if (url.endsWith('/scans'))
-      return Promise.resolve(
-        new Response(JSON.stringify({ id: 1, status: 'done', stats: { inserted: 5 },
-                                      started_at: '2026-06-10T00:00:00Z', finished_at: null }),
-          { status: 200 }),
-      )
+    }
+    if (url.endsWith('/scans') && init?.method === 'POST') {
+      const respond = () => new Response(JSON.stringify({ id: 1, status: 'done', stats: { inserted: 5 },
+                                                          started_at: '2026-06-10T00:00:00Z', finished_at: null }),
+                                          { status: 200 })
+      return scanPromise ? scanPromise.then(respond) : Promise.resolve(respond())
+    }
     if (url.endsWith('/admin/clear-data') || url.endsWith('/admin/clear-data-and-users'))
       return Promise.resolve(new Response(null, { status: 204 }))
     return Promise.resolve(new Response('{}', { status: 200 }))
@@ -91,6 +101,31 @@ describe('SettingsPage', () => {
         ),
       ).toBe(true)
     })
+  })
+
+  it('shows live scan progress while running, then clears it once done', async () => {
+    let resolveScan: () => void = () => {}
+    const scanPromise = new Promise<void>((resolve) => { resolveScan = resolve })
+    mockApi({
+      scanPromise,
+      scanLatestSequence: [
+        null,
+        { id: 1, status: 'running', stats: {}, started_at: '2026-06-13T00:00:00Z',
+          finished_at: null,
+          progress: { stage: 'discovery', symbol: 'TSLA', current: 3, total: 10 } },
+        { id: 1, status: 'done', stats: { inserted: 5 }, started_at: '2026-06-13T00:00:00Z',
+          finished_at: '2026-06-13T00:05:00Z', progress: null },
+      ],
+    })
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: /re-run universe scan/i }))
+
+    expect(await screen.findByText(/scanning for new listings: tsla \(3\/10\)/i))
+      .toBeInTheDocument()
+
+    resolveScan()
+    await waitFor(() =>
+      expect(screen.queryByText(/scanning for new listings/i)).not.toBeInTheDocument())
   })
 
   describe('danger zone', () => {

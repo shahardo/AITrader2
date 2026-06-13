@@ -17,6 +17,7 @@ import {
   triggerScan,
   updateMe,
 } from '../api/client'
+import ProgressLine from '../components/ProgressLine'
 import Spinner from '../components/Spinner'
 
 /** Settings page at /settings. */
@@ -50,6 +51,13 @@ export default function SettingsPage() {
   const rescan = useMutation({
     mutationFn: triggerScan,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scan-latest'] }),
+  })
+  const scanRunning = rescan.isPending || scan.data?.status === 'running'
+  useQuery({
+    queryKey: ['scan-latest'],
+    queryFn: getLatestScan,
+    enabled: scanRunning,
+    refetchInterval: 1000,
   })
   const clearData = useMutation({
     mutationFn: clearAllData,
@@ -161,6 +169,9 @@ export default function SettingsPage() {
           {rescan.isPending ? t('scan.scanning') : t('scan.rerun')}
           {rescan.isPending && <Spinner className="h-4 w-4" />}
         </button>
+        {scanRunning && (
+          <ProgressLine progress={scan.data?.progress} ns="settings" keyPrefix="scan.progress" />
+        )}
         {rescan.error && (
           <p role="alert" className="text-sm text-negative">
             {t('scan.error')}
