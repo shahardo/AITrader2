@@ -32,6 +32,7 @@
     "noPendingProposal": "אין הצעה ראשונית בהמתנה",
     "unknownStrategy": "אסטרטגיה לא ידועה",
     "emailAlreadyRegistered": "כתובת האימייל הזו רשומה כבר במערכת",
-    "invalidCredentials": "אימייל או סיסמה שגויים"
+    "invalidCredentials": "אימייל או סיסמה שגויים",
+    "taskQueueUnavailable": "לא ניתן להפעיל את האבולוציה — תור המשימות אינו זמין. ודאו ש-Redis ו-Celery worker פעילים."
   }
 }

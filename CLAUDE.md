@@ -23,6 +23,11 @@ uv pip install -e ".[dev]" "pydantic[email]" lxml
 alembic upgrade head                   # needs DATABASE_URL pointing at PostgreSQL
 uvicorn app.main:app --reload
 
+# Celery broker — needed for POST /strategies/evolve and the daily/weekly/outcome jobs.
+# Requires a local Redis at REDIS_URL (default redis://localhost:6379/0).
+celery -A app.jobs.celery_app worker --pool=solo --loglevel=info  # --pool=solo required on Windows
+celery -A app.jobs.celery_app beat --loglevel=info                # optional: runs the scheduled jobs
+
 pytest                                  # full suite
 pytest tests/test_backtest.py           # one file
 pytest tests/test_backtest.py::test_name  # one test
@@ -66,6 +71,17 @@ DB sessions come from `core.db.get_db` (per-request session); authenticated rout
 `Base.metadata` (and Alembic autogeneration / test `create_all`) sees them.
 
 ### Scheduled pipeline (Celery beat, `app/jobs/celery_app.py`, Asia/Jerusalem tz)
+
+`celery_app` is broker-only (no result backend — nothing calls `.get()`/`AsyncResult`, so
+adding `backend=` just adds an extra Redis pubsub-connect failure mode). Both a running Redis
+(`REDIS_URL`, default `redis://localhost:6379/0`) and a `celery worker` consuming the `celery`
+queue are required for `.delay()`-dispatched tasks (`app.jobs.evolve_strategy` from
+`POST /strategies/evolve`) and for beat-scheduled jobs to actually execute — without a worker,
+dispatched tasks queue in Redis indefinitely and e.g. `StrategyEvolutionRun.status` stays
+`pending` forever (the Strategy Lab UI then appears stuck on "Evolving…"). If Redis itself is
+unreachable, `evolve_strategy_task.delay(...)` raises immediately; `POST /strategies/evolve`
+catches this, marks the just-created `StrategyEvolutionRun` `failed` with an
+`error_message`, and returns 503 (surfaced in the Strategy Lab via `translateApiError`).
 
 - **`daily_pipeline`** (Mon-Fri 23:45): `marketdata.service.sync_price_history` →
   `analysis.service.run_analysis` (technical + sentiment + blend + rank) →

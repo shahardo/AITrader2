@@ -185,6 +185,27 @@ uv run pytest && uv run ruff check app scripts tests
 PowerShell, cmd, and bash). To activate the venv directly instead: PowerShell
 `.venv\Scripts\Activate.ps1`, cmd `.venv\Scripts\activate.bat`, bash `source .venv/Scripts/activate`.
 
+Background jobs — `POST /strategies/evolve` and the daily/weekly/outcome-tracker jobs in the
+[Operations runbook](#operations-runbook) — run via Celery and need a local Redis as the
+broker plus a worker process consuming the queue; `uvicorn` alone won't run them:
+
+```bash
+# Redis: run a local redis-server so REDIS_URL (default redis://localhost:6379/0) connects.
+# On Windows, scripts/start-redis.ps1 launches the redis-windows-fork build (winget install
+# taizod1024.redis-windows-fork) with its dump.rdb under .redis-data/ (gitignored):
+powershell -ExecutionPolicy Bypass -File scripts\start-redis.ps1
+# Elsewhere, use your package manager's redis-server.
+
+uv run celery -A app.jobs.celery_app worker --pool=solo --loglevel=info  # --pool=solo required on Windows
+uv run celery -A app.jobs.celery_app beat --loglevel=info                # optional: scheduled jobs
+```
+
+Without a running Redis and worker, `POST /strategies/evolve` now fails fast with a 503
+("task queue unavailable") and marks the run `failed` instead of leaving it `pending`
+forever. With Redis up but no worker, `.delay()`-dispatched tasks (e.g. a Strategy Lab
+"Build strategy" click) queue in Redis but never execute, leaving
+`StrategyEvolutionRun.status` stuck at `pending` and the UI stuck on "Evolving…".
+
 Populate the universe and price history (run from `backend/`, with `.venv` active or via
 `uv run`; first run takes a while on free Yahoo data):
 

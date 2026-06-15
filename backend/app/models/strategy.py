@@ -88,11 +88,14 @@ class StrategyEvolutionRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
-    # pending|running|done|failed
+    # pending|running|done|failed|cancelled
+    cancel_requested: Mapped[bool] = mapped_column(default=False)
     triggered_by: Mapped[str] = mapped_column(String(20), default="manual")  # manual|weekly
     population_size: Mapped[int] = mapped_column(Integer)
     generations: Mapped[int] = mapped_column(Integer)
     current_generation: Mapped[int] = mapped_column(Integer, default=0)
+    # Fraction (0..1) of the current generation's population evaluated so far.
+    generation_progress: Mapped[float] = mapped_column(Float, default=0.0)
     risk_weight: Mapped[float] = mapped_column(Float, default=1.0)
     max_symbols: Mapped[int] = mapped_column(Integer, default=25)
     fitness_history: Mapped[list] = mapped_column(JSON, default=list)

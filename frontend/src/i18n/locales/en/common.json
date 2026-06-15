@@ -32,6 +32,7 @@
     "noPendingProposal": "No pending initial proposal",
     "unknownStrategy": "Unknown strategy",
     "emailAlreadyRegistered": "Email already registered",
-    "invalidCredentials": "Invalid email or password"
+    "invalidCredentials": "Invalid email or password",
+    "taskQueueUnavailable": "Could not start evolution — task queue unavailable. Make sure Redis and the Celery worker are running."
   }
 }

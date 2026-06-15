@@ -16,3 +16,5 @@ dist/
 .env
 *.db
 _migr.db
+dump.rdb
+.redis-data/

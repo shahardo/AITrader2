@@ -6,7 +6,8 @@
     "evaluating": "Evaluating (10mo train / 2mo test)…"
   },
   "errors": {
-    "evaluationFailed": "Evaluation failed — load price history first (Universe page / data loader)"
+    "evaluationFailed": "Evaluation failed — load price history first (Universe page / data loader)",
+    "evolutionFailed": "Could not start evolution"
   },
   "loading": "Loading…",
   "metrics": {
@@ -24,7 +25,9 @@
     "latestTestSharpe": "latest test Sharpe",
     "notEvaluated": "Not evaluated yet.",
     "run": "Run {{date}} — test Sharpe {{value}}",
-    "runCandidate": "Run {{date}} — candidate #{{rank}} — test Sharpe {{value}}"
+    "runCandidate": "Run {{date}} — candidate #{{rank}} — test Sharpe {{value}}",
+    "showAllRuns": "Show all {{count}} runs",
+    "showFewerRuns": "Show fewer runs"
   },
   "evolved": {
     "populationSize": "Population size",
@@ -32,6 +35,7 @@
     "maxSymbols": "Max symbols",
     "riskWeight": "Risk weight",
     "build": "Build strategy",
+    "starting": "Starting…",
     "building": "Evolving (gen {{current}}/{{total}})…",
     "fitnessChart": "Best and average fitness per generation",
     "weights": "Signal weights (rank #1 candidate)",

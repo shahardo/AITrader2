@@ -2,6 +2,9 @@
 # with train/test metrics and equity curves, trade-by-trade drill-down, and the
 # manual evaluation trigger (PRD FR-8 / FR-10).
 
+import logging
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -19,7 +22,14 @@ from app.schemas.portfolio import (
 )
 from app.strategy.evaluator import ensure_strategy_rows, evaluate_all_strategies
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["strategies"])
+
+EVOLUTION_QUEUE_UNAVAILABLE = (
+    "Could not start evolution — task queue unavailable. Make sure Redis and "
+    "the Celery worker are running."
+)
 
 
 class EvaluateRequest(BaseModel):
@@ -117,7 +127,16 @@ def evolve_now(payload: EvolveRequest, db: Session = Depends(get_db),
     )
     db.add(run)
     db.commit()
-    evolve_strategy_task.delay(run.id, payload.model_dump())
+    try:
+        evolve_strategy_task.delay(run.id, payload.model_dump())
+    except Exception as exc:
+        logger.exception("Failed to dispatch evolution task for run %s", run.id)
+        run.status = "failed"
+        run.error_message = EVOLUTION_QUEUE_UNAVAILABLE
+        run.completed_at = datetime.now(UTC)
+        db.commit()
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
+                            EVOLUTION_QUEUE_UNAVAILABLE) from exc
     return StrategyEvolutionRunOut.model_validate(run)
 
 
@@ -137,4 +156,23 @@ def get_evolution_run(run_id: int, db: Session = Depends(get_db),
     run = db.get(StrategyEvolutionRun, run_id)
     if run is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Evolution run not found")
+    return StrategyEvolutionRunOut.model_validate(run)
+
+
+@router.post("/strategy-evolution-runs/{run_id}/cancel", response_model=StrategyEvolutionRunOut)
+def cancel_evolution_run(run_id: int, db: Session = Depends(get_db),
+                         _user=Depends(get_current_user)) -> StrategyEvolutionRunOut:
+    """Request that an in-progress evolution run stop early.
+
+    The worker checks this flag between generations (and between individual
+    backtests within a generation) and marks the run "cancelled" once it
+    stops; this endpoint only flips the flag, it does not block until then.
+    """
+    run = db.get(StrategyEvolutionRun, run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Evolution run not found")
+    if run.status not in ("pending", "running"):
+        raise HTTPException(status.HTTP_409_CONFLICT, "Evolution run is not in progress")
+    run.cancel_requested = True
+    db.commit()
     return StrategyEvolutionRunOut.model_validate(run)

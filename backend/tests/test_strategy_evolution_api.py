@@ -29,6 +29,21 @@ def test_evolve_endpoint_creates_pending_run_and_dispatches_task(client, auth_he
     assert options["population_size"] == 12
 
 
+def test_evolve_endpoint_reports_broker_failure(client, auth_headers, db_session):
+    with patch("app.api.strategies.evolve_strategy_task.delay",
+               side_effect=ConnectionRefusedError("Redis is down")):
+        resp = client.post("/api/v1/strategies/evolve", headers=auth_headers,
+                           json={"population_size": 12, "generations": 5, "max_symbols": 5})
+    assert resp.status_code == 503
+    assert "task queue unavailable" in resp.json()["detail"]
+
+    run = db_session.query(StrategyEvolutionRun).order_by(
+        StrategyEvolutionRun.id.desc()).first()
+    assert run.status == "failed"
+    assert "task queue unavailable" in run.error_message
+    assert run.completed_at is not None
+
+
 def test_get_and_list_evolution_runs(client, auth_headers, db_session):
     run = StrategyEvolutionRun(status="running", triggered_by="manual",
                                population_size=10, generations=5, current_generation=2,
@@ -100,3 +115,64 @@ def test_run_evolution_and_persist_marks_failure(db_session):
     assert evo_run.status == "failed"
     assert evo_run.error_message
     assert evo_run.completed_at is not None
+
+
+def test_run_evolution_and_persist_tracks_generation_progress(db_session):
+    _seed_universe(db_session, n_symbols=3)
+    evo_run = StrategyEvolutionRun(status="running", triggered_by="manual",
+                                   population_size=8, generations=2,
+                                   risk_weight=1.0, max_symbols=3)
+    db_session.add(evo_run)
+    db_session.commit()
+
+    config = EvolutionConfig(population_size=8, generations=2, seed=7, max_symbols=3)
+    run_evolution_and_persist(db_session, evo_run, config, as_of=date.today())
+
+    assert evo_run.status == "done"
+    assert evo_run.current_generation == 2
+    assert evo_run.generation_progress == 0.0
+
+
+def test_run_evolution_and_persist_respects_cancel_requested(db_session):
+    evo_run = StrategyEvolutionRun(status="running", triggered_by="manual",
+                                   population_size=8, generations=2,
+                                   risk_weight=1.0, max_symbols=3, cancel_requested=True)
+    db_session.add(evo_run)
+    db_session.commit()
+
+    config = EvolutionConfig(population_size=8, generations=2, seed=7, max_symbols=3)
+    run_evolution_and_persist(db_session, evo_run, config, as_of=date.today())
+
+    assert evo_run.status == "cancelled"
+    assert evo_run.completed_at is not None
+    assert evo_run.strategy_run_id is None
+    assert db_session.query(StrategyRun).filter(StrategyRun.rank > 0).count() == 0
+
+
+def test_cancel_evolution_run_sets_flag(client, auth_headers, db_session):
+    run = StrategyEvolutionRun(status="running", triggered_by="manual",
+                               population_size=10, generations=5)
+    db_session.add(run)
+    db_session.commit()
+
+    resp = client.post(f"/api/v1/strategy-evolution-runs/{run.id}/cancel", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["cancel_requested"] is True
+
+    db_session.refresh(run)
+    assert run.cancel_requested is True
+
+
+def test_cancel_evolution_run_rejects_finished_run(client, auth_headers, db_session):
+    run = StrategyEvolutionRun(status="done", triggered_by="manual",
+                               population_size=10, generations=5)
+    db_session.add(run)
+    db_session.commit()
+
+    resp = client.post(f"/api/v1/strategy-evolution-runs/{run.id}/cancel", headers=auth_headers)
+    assert resp.status_code == 409
+
+
+def test_cancel_evolution_run_missing(client, auth_headers):
+    resp = client.post("/api/v1/strategy-evolution-runs/999999/cancel", headers=auth_headers)
+    assert resp.status_code == 404

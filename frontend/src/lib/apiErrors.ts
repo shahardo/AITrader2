@@ -13,6 +13,8 @@ const API_ERROR_KEYS: Record<string, string> = {
   'Unknown strategy': 'apiErrors.unknownStrategy',
   'Email already registered': 'apiErrors.emailAlreadyRegistered',
   'Invalid email or password': 'apiErrors.invalidCredentials',
+  'Could not start evolution — task queue unavailable. Make sure Redis and the Celery worker are running.':
+    'apiErrors.taskQueueUnavailable',
 }
 
 /** Render an API (or other) error for display, translated when recognized. */

@@ -77,6 +77,7 @@ class EvolutionResult:
     train_end: date
     test_start: date
     test_end: date
+    cancelled: bool = False
 
 
 def _random_gene(rng: random.Random) -> dict[str, float]:
@@ -171,6 +172,7 @@ def run_evolution(
     config: EvolutionConfig,
     as_of: date | None = None,
     progress_cb=None,
+    on_individual_progress=None,
 ) -> EvolutionResult:
     """Evolve the 'evolved' strategy's gene against the train window.
 
@@ -179,12 +181,19 @@ def run_evolution(
         config: GA hyperparameters and run scope.
         as_of: Evaluation date (defaults to today); window is the trailing year.
         progress_cb: Optional callable(generation, fitness_history) invoked
-            after each generation, for progress tracking.
+            after each generation, for progress tracking. Return a truthy
+            value to stop evolving after this generation.
+        on_individual_progress: Optional callable(generation, evaluated,
+            population_size) invoked after each gene in a generation is
+            backtested, for finer-grained progress. Return a truthy value to
+            stop evolving immediately.
 
     Returns:
         EvolutionResult: Up to TOP_N_CANDIDATES genes (best-first by train
         fitness), each validated on the train and test windows, plus the
-        per-generation fitness history.
+        per-generation fitness history. If stopped early via progress_cb/
+        on_individual_progress, `cancelled` is True and `candidates` reflects
+        only the generations completed so far (possibly empty).
 
     Raises:
         ValueError: If no instruments have enough history to backtest.
@@ -200,13 +209,20 @@ def run_evolution(
     population = [_random_gene(rng) for _ in range(config.population_size)]
     fitness_history: list[dict] = []
     hall_of_fame: list[tuple[dict[str, float], float]] = []
+    cancelled = False
 
     for generation in range(config.generations):
-        results = [
-            run_backtest(EvolvedStrategy(gene), features, train_start, train_end,
-                        config.initial_capital)
-            for gene in population
-        ]
+        results = []
+        for i, gene in enumerate(population):
+            results.append(run_backtest(EvolvedStrategy(gene), features, train_start, train_end,
+                                        config.initial_capital))
+            if on_individual_progress is not None and on_individual_progress(
+                generation, i + 1, len(population)
+            ):
+                cancelled = True
+                break
+        if cancelled:
+            break
         fitnesses = [_fitness(r.metrics, config.risk_weight) for r in results]
 
         hall_of_fame.extend(zip(population, fitnesses, strict=True))
@@ -218,8 +234,9 @@ def run_evolution(
             "best": max(fitnesses),
             "avg": sum(fitnesses) / len(fitnesses),
         })
-        if progress_cb is not None:
-            progress_cb(generation, fitness_history)
+        if progress_cb is not None and progress_cb(generation, fitness_history):
+            cancelled = True
+            break
 
         ranked = sorted(zip(population, fitnesses, strict=True), key=lambda gf: gf[1], reverse=True)
         next_population = [gene for gene, _ in ranked[:config.elite_count]]
@@ -230,6 +247,11 @@ def run_evolution(
             child = _mutate(child, rng, config.mutation_rate, config.mutation_sigma)
             next_population.append(child)
         population = next_population
+
+    if cancelled:
+        return EvolutionResult(candidates=[], fitness_history=fitness_history,
+                                train_start=train_start, train_end=train_end,
+                                test_start=test_start, test_end=test_end, cancelled=True)
 
     candidates: list[EvolutionCandidate] = []
     for rank, (gene, _gene_fitness) in enumerate(hall_of_fame, start=1):
@@ -259,8 +281,10 @@ def run_evolution_and_persist(
     On success, writes one StrategyRun (rank 1-5) plus its BacktestTrade rows
     per candidate, and updates the 'evolved' Strategy's live params/description
     from the rank-1 candidate. On failure, marks evolution_run as "failed" with
-    the error message. Either way, evolution_run.status/completed_at are set
-    and committed.
+    the error message. If cancel_requested is set (before the run starts, or
+    via the progress callbacks below), the run stops early and is marked
+    "cancelled" without persisting any candidates. Either way, evolution_run's
+    status/completed_at are set and committed.
 
     Args:
         db: Database session.
@@ -269,13 +293,38 @@ def run_evolution_and_persist(
         as_of: Evaluation date (defaults to today).
     """
     as_of = as_of or date.today()
+
+    def cancel_requested() -> bool:
+        db.refresh(evolution_run, attribute_names=["cancel_requested"])
+        return evolution_run.cancel_requested
+
+    if cancel_requested():
+        evolution_run.status = "cancelled"
+        evolution_run.completed_at = datetime.now(UTC)
+        db.commit()
+        return
+
     try:
-        def progress_cb(generation: int, fitness_history: list[dict]) -> None:
+        def progress_cb(generation: int, fitness_history: list[dict]) -> bool:
             evolution_run.current_generation = generation + 1
+            evolution_run.generation_progress = 0.0
             evolution_run.fitness_history = fitness_history
             db.commit()
+            return cancel_requested()
 
-        result = run_evolution(db, config, as_of=as_of, progress_cb=progress_cb)
+        def on_individual_progress(generation: int, evaluated: int, population_size: int) -> bool:
+            evolution_run.generation_progress = evaluated / population_size
+            db.commit()
+            return cancel_requested()
+
+        result = run_evolution(db, config, as_of=as_of, progress_cb=progress_cb,
+                               on_individual_progress=on_individual_progress)
+
+        if result.cancelled:
+            evolution_run.status = "cancelled"
+            evolution_run.completed_at = datetime.now(UTC)
+            db.commit()
+            return
 
         strategy_rows = ensure_strategy_rows(db)
         evolved_strategy = strategy_rows["evolved"]

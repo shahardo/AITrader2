@@ -66,14 +66,21 @@ interface MockApiOptions {
   evolutionRuns?: StrategyEvolutionRunOut[]
   evolutionRunById?: Record<number, StrategyEvolutionRunOut>
   evolveResponse?: StrategyEvolutionRunOut
+  evolveError?: { status: number; detail: string }
 }
 
 function mockApi(opts: MockApiOptions = {}) {
-  const { evolvedRuns = [], evolutionRuns = [], evolutionRunById = {}, evolveResponse } = opts
+  const { evolvedRuns = [], evolutionRuns = [], evolutionRunById = {}, evolveResponse,
+    evolveError } = opts
   const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET'
 
     if (url.endsWith('/strategies/evolve') && method === 'POST') {
+      if (evolveError) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ detail: evolveError.detail }), { status: evolveError.status }),
+        )
+      }
       return Promise.resolve(new Response(JSON.stringify(evolveResponse), { status: 202 }))
     }
     const evoMatch = url.match(/\/strategy-evolution-runs\/(\d+)$/)
@@ -230,13 +237,34 @@ describe('StrategyLabPage', () => {
     expect(body).toEqual({ population_size: 50, generations: 30, max_symbols: 25, risk_weight: 2.5 })
   })
 
+  it('shows an error when the evolution request fails to dispatch', async () => {
+    mockApi({
+      evolveError: {
+        status: 503,
+        detail: 'Could not start evolution — task queue unavailable. Make sure Redis and the Celery worker are running.',
+      },
+    })
+    renderPage()
+    await screen.findByText('Evolved (GA)')
+    const evolved = getCard('Evolved (GA)')
+
+    await userEvent.click(evolved.getByRole('button', { name: /build strategy/i }))
+
+    expect(await evolved.findByRole('alert')).toHaveTextContent(/task queue unavailable/i)
+  })
+
   it('shows GA candidate runs with rank labels, weights breakdown, and trade drill-down', async () => {
     mockApi({ evolvedRuns: EVOLVED_RUNS })
     renderPage()
     await screen.findByText('Evolved (GA)')
     const evolved = getCard('Evolved (GA)')
 
+    // Only the 2 most recent runs are shown by default, with a "show all" toggle.
     expect(await evolved.findByText(/candidate #1.*0\.90/)).toBeInTheDocument()
+    expect(evolved.getByText(/candidate #2.*0\.80/)).toBeInTheDocument()
+    expect(evolved.queryByText(/candidate #5.*0\.50/)).not.toBeInTheDocument()
+
+    await userEvent.click(evolved.getByRole('button', { name: /show all 5 runs/i }))
     expect(evolved.getByText(/candidate #5.*0\.50/)).toBeInTheDocument()
 
     // Signal weights breakdown for the rank-1 candidate.
@@ -250,5 +278,58 @@ describe('StrategyLabPage', () => {
     await userEvent.click(evolved.getByText(/candidate #1/i))
     expect(await evolved.findByText('SELL')).toBeInTheDocument()
     expect(evolved.getByText(/"momentum":0.18/)).toBeInTheDocument()
+
+    // Collapsing again hides the lower-ranked candidates.
+    await userEvent.click(evolved.getByRole('button', { name: /show fewer runs/i }))
+    expect(evolved.queryByText(/candidate #5.*0\.50/)).not.toBeInTheDocument()
   })
+
+  it('shows a starting spinner immediately after clicking build, before the run starts polling',
+    async () => {
+      const pendingResponse: StrategyEvolutionRunOut = {
+        id: 99, status: 'pending', triggered_by: 'manual',
+        population_size: 50, generations: 30, current_generation: 0,
+        risk_weight: 1.0, max_symbols: 25, fitness_history: [],
+        strategy_run_id: null, error_message: null,
+        started_at: '2026-06-13T00:00:00Z', completed_at: null,
+      }
+      let resolveEvolve: ((value: Response) => void) | undefined
+      const fetchMock = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+        const method = init?.method ?? 'GET'
+        if (url.endsWith('/strategies/evolve') && method === 'POST') {
+          return new Promise<Response>((resolve) => { resolveEvolve = resolve })
+        }
+        const evoMatch = url.match(/\/strategy-evolution-runs\/(\d+)$/)
+        if (evoMatch) {
+          return Promise.resolve(new Response(JSON.stringify(pendingResponse), { status: 200 }))
+        }
+        if (url.endsWith('/strategy-evolution-runs')) {
+          return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }))
+        }
+        if (url.includes('/strategies/5/runs')) {
+          return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }))
+        }
+        if (url.includes('/runs')) {
+          return Promise.resolve(new Response(JSON.stringify(RUNS), { status: 200 }))
+        }
+        if (url.includes('/strategies')) {
+          return Promise.resolve(new Response(JSON.stringify(STRATEGIES), { status: 200 }))
+        }
+        return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }))
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      renderPage()
+      await screen.findByText('Evolved (GA)')
+      const evolved = getCard('Evolved (GA)')
+
+      const buildButton = evolved.getByRole('button', { name: /build strategy/i })
+      await userEvent.click(buildButton)
+
+      expect(await evolved.findByText(/starting/i)).toBeInTheDocument()
+      expect(buildButton).toBeDisabled()
+
+      resolveEvolve?.(new Response(JSON.stringify(pendingResponse), { status: 202 }))
+      expect(await evolved.findByText(/evolving \(gen 0\/30\)/i)).toBeInTheDocument()
+    })
 })

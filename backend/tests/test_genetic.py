@@ -70,3 +70,48 @@ def test_progress_callback_invoked_per_generation(db_session):
 
     run_evolution(db_session, config, progress_cb=progress_cb)
     assert calls == [(g, g + 1) for g in range(config.generations)]
+
+
+def test_on_individual_progress_invoked_per_individual(db_session):
+    _seed_universe(db_session, n_symbols=3)
+    config = _small_config()
+    calls = []
+
+    def on_individual_progress(generation, evaluated, population_size):
+        calls.append((generation, evaluated, population_size))
+
+    run_evolution(db_session, config, on_individual_progress=on_individual_progress)
+    assert calls == [
+        (g, i, config.population_size)
+        for g in range(config.generations)
+        for i in range(1, config.population_size + 1)
+    ]
+
+
+def test_on_individual_progress_can_stop_evolution_early(db_session):
+    _seed_universe(db_session, n_symbols=3)
+    config = _small_config()
+    calls = []
+
+    def on_individual_progress(generation, evaluated, population_size):
+        calls.append((generation, evaluated))
+        return generation == 0 and evaluated == 3
+
+    result = run_evolution(db_session, config, on_individual_progress=on_individual_progress)
+    assert result.cancelled is True
+    assert result.candidates == []
+    assert result.fitness_history == []
+    assert calls == [(0, 1), (0, 2), (0, 3)]
+
+
+def test_progress_cb_can_stop_evolution_after_a_generation(db_session):
+    _seed_universe(db_session, n_symbols=3)
+    config = _small_config()
+
+    def progress_cb(generation, fitness_history):
+        return generation == 0
+
+    result = run_evolution(db_session, config, progress_cb=progress_cb)
+    assert result.cancelled is True
+    assert result.candidates == []
+    assert len(result.fitness_history) == 1

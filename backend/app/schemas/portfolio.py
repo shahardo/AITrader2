@@ -129,10 +129,12 @@ class StrategyEvolutionRunOut(BaseModel):
 
     id: int
     status: str
+    cancel_requested: bool
     triggered_by: str
     population_size: int
     generations: int
     current_generation: int
+    generation_progress: float
     risk_weight: float
     max_symbols: int
     fitness_history: list

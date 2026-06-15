@@ -17,7 +17,7 @@ def evolve_strategy_task(evolution_run_id: int, options: dict) -> dict:
             generations, risk_weight, max_symbols, symbols).
 
     Returns:
-        dict: {"evolution_run_id": ..., "status": "done"|"failed"}.
+        dict: {"evolution_run_id": ..., "status": "done"|"failed"|"cancelled"}.
     """
     db = SessionLocal()
     try:

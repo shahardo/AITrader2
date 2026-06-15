@@ -25,7 +25,10 @@
       "Bash(python -m pytest *)",
       "Bash(python -m ruff *)",
       "Bash(npm test *)",
-      "Bash(npx --yes pyright *)"
+      "Bash(npx --yes pyright *)",
+      "Bash(winget search *)",
+      "Bash(uv run *)",
+      "Bash(where *)"
     ]
   }
 }

@@ -9,7 +9,6 @@ from app.core.config import get_settings
 celery_app = Celery(
     "aitrader2",
     broker=get_settings().redis_url,
-    backend=get_settings().redis_url,
 )
 celery_app.conf.timezone = "Asia/Jerusalem"
 

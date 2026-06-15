@@ -20,6 +20,7 @@ import FitnessChart from '../components/FitnessChart'
 import InfoIcon from '../components/InfoIcon'
 import LineCompareChart from '../components/LineCompareChart'
 import Spinner from '../components/Spinner'
+import { translateApiError } from '../lib/apiErrors'
 
 const DEFAULT_EVOLVE_OPTIONS: Required<EvolveOptions> = {
   population_size: 50,
@@ -166,7 +167,8 @@ function EvolutionPanel({
   })
 
   const run = evolutionRun.data
-  const isActive = run?.status === 'pending' || run?.status === 'running'
+  const isPolling = run?.status === 'pending' || run?.status === 'running'
+  const isBusy = evolve.isPending || isPolling
 
   useEffect(() => {
     if (run?.status === 'done') {
@@ -233,16 +235,23 @@ function EvolutionPanel({
       <button
         type="button"
         onClick={() => evolve.mutate()}
-        disabled={evolve.isPending || isActive}
+        disabled={isBusy}
         className="flex items-center gap-2 rounded bg-accent-button px-4 py-1.5 text-sm font-semibold hover:bg-accent-button-hover disabled:opacity-50"
       >
-        {isActive
+        {isPolling
           ? t('evolved.building', { current: run.current_generation, total: run.generations })
-          : t('evolved.build')}
-        {isActive && <Spinner className="h-4 w-4" />}
+          : isBusy
+            ? t('evolved.starting')
+            : t('evolved.build')}
+        {isBusy && <Spinner className="h-4 w-4" />}
       </button>
-      {isActive && run.fitness_history.length > 0 && (
+      {isPolling && run.fitness_history.length > 0 && (
         <FitnessChart history={run.fitness_history} />
+      )}
+      {evolve.error && (
+        <p role="alert" className="text-sm text-negative">
+          {translateApiError(evolve.error, t, t('errors.evolutionFailed'))}
+        </p>
       )}
       {run?.status === 'failed' && (
         <p role="alert" className="text-sm text-negative">
@@ -290,11 +299,14 @@ function StrategyCard({
   const { t } = useTranslation('strategyLab')
   const [openRun, setOpenRun] = useState<number | null>(null)
   const [infoOpen, setInfoOpen] = useState(false)
+  const [showAllRuns, setShowAllRuns] = useState(false)
   const runs = useQuery({
     queryKey: ['strategy-runs', strategyId],
     queryFn: () => listStrategyRuns(strategyId),
   })
   const latest = runs.data?.[0]
+  const visibleRuns = showAllRuns ? runs.data : runs.data?.slice(0, 2)
+  const hasMoreRuns = (runs.data?.length ?? 0) > 2
   return (
     <div className="rounded border border-edge bg-panel p-4">
       <div className="flex items-baseline gap-3">
@@ -339,7 +351,7 @@ function StrategyCard({
       {runs.data && runs.data.length === 0 && (
         <p className="mt-2 text-sm text-ink-4">{t('card.notEvaluated')}</p>
       )}
-      {runs.data?.map((run) => (
+      {visibleRuns?.map((run) => (
         <div key={run.id} className="mt-2">
           <button
             onClick={() => setOpenRun(openRun === run.id ? null : run.id)}
@@ -362,6 +374,18 @@ function StrategyCard({
           {openRun === run.id && <RunDetail run={run} />}
         </div>
       ))}
+      {hasMoreRuns && (
+        <button
+          type="button"
+          onClick={() => setShowAllRuns((show) => !show)}
+          className="mt-2 flex items-center gap-1 text-sm text-accent-link hover:underline"
+        >
+          {showAllRuns
+            ? t('card.showFewerRuns')
+            : t('card.showAllRuns', { count: runs.data!.length })}
+          <span className="inline-block rtl:-scale-x-100">{showAllRuns ? '▾' : '▸'}</span>
+        </button>
+      )}
     </div>
   )
 }
